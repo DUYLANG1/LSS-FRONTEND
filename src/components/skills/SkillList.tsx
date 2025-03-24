@@ -10,22 +10,14 @@ interface Skill {
 }
 
 interface SkillListProps {
-  skills: Skill[];
+  searchQuery: string;
+  category: string | null;
 }
 
-export default function SkillList({ skills }: SkillListProps) {
+export function SkillList({ searchQuery, category }: SkillListProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {skills.map((skill) => (
-        <SkillCard
-          key={skill.id}
-          title={skill.title}
-          description={skill.description}
-          category={skill.category}
-          userAvatar={skill.userAvatar}
-          userName={skill.userName}
-        />
-      ))}
+    <div className="space-y-4">
+      {/* Add your skill list implementation here */}
     </div>
   );
 }

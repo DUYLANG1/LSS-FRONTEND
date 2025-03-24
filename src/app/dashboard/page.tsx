@@ -16,7 +16,7 @@ export default function DashboardPage() {
               title="JavaScript Development"
               description="Frontend development with React and Next.js"
               category="Programming"
-              userAvatar="/placeholder-avatar.jpg"
+              userAvatar="/google.svg"
               userName="You"
             />
           </div>
@@ -29,12 +29,12 @@ export default function DashboardPage() {
             <ExchangeRequest
               fromUser={{
                 name: "John Doe",
-                avatar: "/placeholder-avatar.jpg",
+                avatar: "/google.svg",
                 offeredSkill: "Guitar Lessons",
               }}
               toUser={{
                 name: "You",
-                avatar: "/your-avatar.jpg",
+                avatar: "/facebook.svg",
                 requestedSkill: "JavaScript Development",
               }}
               status="pending"

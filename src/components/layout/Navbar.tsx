@@ -7,12 +7,30 @@ import { UserRole } from "@/utils/permissions";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const getInitial = (name: string | null | undefined) => {
-    return (name?.charAt(0) || "U").toUpperCase();
-  };
+  if (status === "loading") {
+    return (
+      <nav className="bg-[var(--card-background)] border-b border-[var(--card-border)] shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-14">
+            <div className="flex items-center">
+              <Link
+                href="/"
+                className="font-bold text-xl text-[var(--text-primary)]"
+              >
+                SkillSwap
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-[var(--card-background)] border-b border-[var(--card-border)] shadow-sm">
@@ -26,7 +44,7 @@ export default function Navbar() {
               SkillSwap
             </Link>
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center space-x-4">
             <Link
               href="/skills"
               className="text-[var(--text-primary)] hover:text-[var(--text-secondary)]"
@@ -39,8 +57,8 @@ export default function Navbar() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 text-[var(--text-primary)] hover:text-[var(--text-secondary)]"
                 >
-                  <div className="w-8 h-8 rounded-4xl bg-blue-500 flex items-center justify-center text-white font-medium">
-                    {getInitial(session.user?.name)}
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                    {session.user?.name?.[0]?.toUpperCase() || "U"}
                   </div>
                   <svg
                     className="w-4 h-4"
@@ -73,7 +91,7 @@ export default function Navbar() {
                     >
                       Profile
                     </Link>
-                    {session?.user?.role === UserRole.ADMIN && (
+                    {session.user?.role === UserRole.ADMIN && (
                       <Link
                         href="/admin"
                         className="block px-4 py-2 text-[var(--text-primary)] hover:bg-[var(--card-border)]"

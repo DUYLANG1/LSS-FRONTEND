@@ -1,8 +1,7 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/providers/AuthProvider";
+import Providers from "@/components/providers/Providers";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -20,15 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={geist.className}>
-        <AuthProvider>
-          <ThemeProvider>
+      <body className={`${geist.className} antialiased`}>
+        <Providers>
+          <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
             <Navbar />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {children}
             </main>
-          </ThemeProvider>
-        </AuthProvider>
+          </div>
+        </Providers>
       </body>
     </html>
   );

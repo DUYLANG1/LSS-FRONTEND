@@ -16,18 +16,22 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // Add your credentials validation logic here
-        // This is where you would check against your database
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          // Replace with your API call to validate credentials
           const user = await validateUser(
             credentials.email,
             credentials.password
           );
-          return user;
+          if (!user) return null;
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role || "MEMBER",
+          };
         } catch (error) {
+          console.error("Auth error:", error);
           return null;
         }
       },
@@ -55,6 +59,7 @@ const handler = NextAuth({
       return token;
     },
   },
+  debug: process.env.NODE_ENV === "development",
 });
 
 export { handler as GET, handler as POST };

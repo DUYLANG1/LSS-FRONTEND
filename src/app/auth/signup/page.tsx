@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_ENDPOINTS } from "@/config/api";
 
 export default function SignUp() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function SignUp() {
 
     try {
       // TODO: Replace with your API call to create user
-      const response = await fetch("/api/auth/signup", {
+      const response = await fetch(API_ENDPOINTS.auth.signup, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
