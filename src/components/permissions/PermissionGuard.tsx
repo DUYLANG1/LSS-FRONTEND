@@ -1,5 +1,9 @@
 import { ReactNode } from "react";
-import { UserRole, hasPermission, PermissionKey } from "../utils/permissions";
+import {
+  UserRole,
+  hasPermission,
+  PermissionKey,
+} from "../../utils/permissions";
 
 interface PermissionGuardProps {
   children: ReactNode;

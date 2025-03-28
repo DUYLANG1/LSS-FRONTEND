@@ -1,6 +1,6 @@
-import { UserRole } from "../utils/permissions";
-import { PermissionGuard } from "./PermissionGuard";
-import { UserList } from "./UserList";
+import { UserRole } from "../../utils/permissions";
+import { PermissionGuard } from "../permissions/PermissionGuard";
+import { UserList } from "../user/UserList";
 
 interface DashboardProps {
   userRole: UserRole;

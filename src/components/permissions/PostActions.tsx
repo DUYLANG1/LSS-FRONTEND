@@ -1,5 +1,5 @@
-import { usePermissions } from "../hooks/usePermissions";
-import { UserRole } from "../utils/permissions";
+import { usePermissions } from "../../hooks/usePermissions";
+import { UserRole } from "../../utils/permissions";
 
 interface PostActionsProps {
   userRole: UserRole;

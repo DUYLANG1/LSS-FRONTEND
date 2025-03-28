@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { LoadingState } from "@/components/LoadingState";
-import { ErrorState } from "@/components/ErrorState";
-import { BackButton } from "@/components/BackButton";
-import { UserAvatar } from "@/components/UserAvatar";
-import { ExchangeModal } from "@/components/ExchangeModal";
+import { LoadingState } from "@/components/common/LoadingState";
+import { ErrorState } from "@/components/common/ErrorState";
+import { BackButton } from "@/components/common/BackButton";
+import { UserAvatar } from "@/components/user/UserAvatar";
+import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
 import { useSkill } from "@/hooks/useSkill";
 
 export default function SkillDetailPage({

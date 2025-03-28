@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/providers/ProtectedRoute";
 import { UserRole } from "@/utils/permissions";
 
 export default function ProfilePage() {
