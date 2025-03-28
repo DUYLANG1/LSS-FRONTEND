@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { API_ENDPOINTS } from "@/config/api";
+import { authService } from "@/services/authService";
 
 export default function SignUp() {
   const router = useRouter();
@@ -24,25 +24,17 @@ export default function SignUp() {
     }
 
     try {
-      // TODO: Replace with your API call to create user
-      const response = await fetch(API_ENDPOINTS.auth.signup, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
+      await authService.signUp({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
       });
 
-      if (response.ok) {
-        router.push("/auth/signin");
-      } else {
-        const data = await response.json();
-        setError(data.message || "Something went wrong");
-      }
+      router.push("/auth/signin");
     } catch (error) {
-      setError("Failed to create account");
+      setError(
+        error instanceof Error ? error.message : "Failed to create account"
+      );
     }
   };
 

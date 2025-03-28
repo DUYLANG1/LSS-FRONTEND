@@ -1,14 +1,10 @@
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "@/lib/auth";
+import { UserRole } from "@/utils/permissions";
 
-const handler = NextAuth({
+const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID!,
-      clientSecret: process.env.GOOGLE_SECRET!,
-    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -16,50 +12,63 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password required");
+        }
 
         try {
           const user = await validateUser(
             credentials.email,
             credentials.password
           );
-          if (!user) return null;
+
+          if (!user) {
+            throw new Error("Invalid credentials");
+          }
+
+          // Ensure we're returning the correct role type
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role || "MEMBER",
+            role: user.role as UserRole,
           };
         } catch (error) {
           console.error("Auth error:", error);
-          return null;
+          throw new Error(
+            error instanceof Error ? error.message : "Authentication failed"
+          );
         }
       },
     }),
   ],
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.name = user.name;
+        token.email = user.email;
+      }
+      return token;
+    },
     async session({ session, token }) {
       return {
         ...session,
         user: {
           ...session.user,
-          role: token.role,
+          id: token.id,
+          role: token.role as UserRole, // Explicitly type cast
         },
       };
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
+  },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
   },
   debug: process.env.NODE_ENV === "development",
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

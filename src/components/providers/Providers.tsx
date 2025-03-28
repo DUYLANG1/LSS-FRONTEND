@@ -4,7 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { useEffect, useState } from "react";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function AuthProviders({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

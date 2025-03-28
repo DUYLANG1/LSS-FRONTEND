@@ -21,7 +21,7 @@ export default function Home() {
           href="/dashboard"
           className="bg-gray-100 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-200"
         >
-          Get Started
+          Create Skill Swap
         </Link>
       </div>
     </div>

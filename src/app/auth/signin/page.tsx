@@ -1,17 +1,24 @@
 "use client";
-import { signIn } from "next-auth/react";
+
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SignIn() {
+export default function 
+() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
       const result = await signIn("credentials", {
         email,
@@ -20,12 +27,16 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        setError("Invalid credentials");
+        setError(result.error);
       } else {
-        router.push("/dashboard");
+        // Get return URL from query parameters or default to dashboard
+        const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+        router.push(callbackUrl);
       }
     } catch (error) {
-      setError("Something went wrong");
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,9 +77,10 @@ export default function SignIn() {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50"
         >
-          Sign In
+          {loading ? "Signing in..." : "Sign In"}
         </button>
       </form>
 

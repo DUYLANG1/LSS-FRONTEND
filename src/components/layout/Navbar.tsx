@@ -76,7 +76,7 @@ export default function Navbar() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 py-2 bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg shadow-xl">
+                  <div className="z-10 absolute right-0 mt-2 w-48 py-2 bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg shadow-xl">
                     <Link
                       href="/dashboard"
                       className="block px-4 py-2 text-[var(--text-primary)] hover:bg-[var(--card-border)]"

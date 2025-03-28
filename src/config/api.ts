@@ -1,25 +1,26 @@
-export const API_BASE_URL = "http://localhost:4000";
+export const API_BASE_BACKEND = "http://localhost:4000";
 
 export const API_ENDPOINTS = {
   auth: {
-    signin: `${API_BASE_URL}/auth/signin`,
-    signup: `${API_BASE_URL}/auth/signup`,
+    signin: `${API_BASE_BACKEND}/auth/signin`,
+    signup: `${API_BASE_BACKEND}/auth/signup`,
   },
   skills: {
-    list: `${API_BASE_URL}/skills`,
-    categories: `${API_BASE_URL}/skills/categories`,
+    list: `${API_BASE_BACKEND}/skills`,
+    create: `${API_BASE_BACKEND}/skills`,
+    getById: (id: string) => `${API_BASE_BACKEND}/skills/${id}`,
+    update: (id: string) => `${API_BASE_BACKEND}/skills/${id}`,
+    delete: (id: string) => `${API_BASE_BACKEND}/skills/${id}`,
   },
+  categories: `${API_BASE_BACKEND}/categories`,
   users: {
-    profile: `${API_BASE_URL}/users`,
-    ban: (userId: string) => `${API_BASE_URL}/admin/users/${userId}/ban`,
-  },
-  admin: {
-    metrics: `${API_BASE_URL}/admin/metrics`,
-    users: `${API_BASE_URL}/admin/users`,
+    profile: `${API_BASE_BACKEND}/users/profile`,
+    update: `${API_BASE_BACKEND}/users/profile`,
+    skills: `${API_BASE_BACKEND}/users/skills`,
   },
   exchanges: {
-    list: `${API_BASE_URL}/exchanges`,
-    create: `${API_BASE_URL}/exchanges`,
-    update: (id: string) => `${API_BASE_URL}/exchanges/${id}`,
+    list: `${API_BASE_BACKEND}/exchanges`,
+    create: `${API_BASE_BACKEND}/exchanges`,
+    respond: (id: string) => `${API_BASE_BACKEND}/exchanges/${id}/respond`,
   },
 };

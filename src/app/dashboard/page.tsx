@@ -13,11 +13,19 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {/* Add your skills data here */}
             <SkillCard
-              title="JavaScript Development"
-              description="Frontend development with React and Next.js"
-              category="Programming"
-              userAvatar="/google.svg"
-              userName="You"
+              skill={{
+                id: "1",
+                title: "JavaScript Development",
+                description: "Frontend development with React and Next.js",
+                category: "Programming",
+                userId: "user-id",
+                createdAt: new Date().toISOString(),
+                user: {
+                  id: "user-id",
+                  name: "You",
+                  email: "you@example.com",
+                },
+              }}
             />
           </div>
         </div>
