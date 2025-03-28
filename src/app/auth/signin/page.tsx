@@ -1,39 +1,37 @@
 "use client";
 
-import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 
-export default function 
-() {
+export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const formData = new FormData(e.currentTarget);
+
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
+      const res = await signIn("credentials", {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
         redirect: false,
       });
 
-      if (result?.error) {
-        setError(result.error);
+      if (res?.error) {
+        setError(res.error);
       } else {
-        // Get return URL from query parameters or default to dashboard
         const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
         router.push(callbackUrl);
       }
-    } catch (error) {
+    } catch (err) {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -55,8 +53,7 @@ export default function
           <label className="block text-sm font-medium mb-2">Email</label>
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name="email"
             className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
@@ -66,10 +63,7 @@ export default function
           <label className="block text-sm font-medium mb-2">Password</label>
           <input
             type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
+            name="password"
             className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />

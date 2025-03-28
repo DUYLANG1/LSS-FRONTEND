@@ -15,20 +15,20 @@ export async function validateUser(
   try {
     const response = await fetch(API_ENDPOINTS.auth.signin, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
+      cache: "no-store",
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Authentication failed");
+      throw new Error("Invalid credentials");
     }
 
     const data = await response.json();
-    return {
-      ...data.user,
-      role: data.user.role as UserRole,
-    };
+    return data.user;
   } catch (error) {
     console.error("Auth error:", error);
     return null;

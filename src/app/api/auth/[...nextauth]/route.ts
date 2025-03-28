@@ -1,9 +1,9 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "@/lib/auth";
 import { UserRole } from "@/utils/permissions";
 
-const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -12,11 +12,11 @@ const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password required");
-        }
-
         try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("Email and password required");
+          }
+
           const user = await validateUser(
             credentials.email,
             credentials.password
@@ -26,46 +26,49 @@ const authOptions: NextAuthOptions = {
             throw new Error("Invalid credentials");
           }
 
-          // Ensure we're returning the correct role type
+          // Return standardized user object
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role as UserRole,
+            role: user.role,
           };
         } catch (error) {
           console.error("Auth error:", error);
-          throw new Error(
-            error instanceof Error ? error.message : "Authentication failed"
-          );
+          return null;
         }
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.name = user.name;
-        token.email = user.email;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-          role: token.role as UserRole, // Explicitly type cast
-        },
-      };
-    },
-  },
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  callbacks: {
+    async jwt({ token, user, account }) {
+      // Initial sign in
+      if (account && user) {
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+        };
+      }
+      // Return previous token if the access token has not expired yet
+      return token;
+    },
+    async session({ session, token }) {
+      // Send properties to the client
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.role = token.role as UserRole;
+      }
+      return session;
+    },
   },
   debug: process.env.NODE_ENV === "development",
 };

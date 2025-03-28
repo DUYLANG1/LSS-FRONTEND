@@ -34,6 +34,13 @@ export default function CreateSkillPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check session first
+    if (!session) {
+      setError("You must be logged in to create a skill");
+      return;
+    }
+
+    // Check form fields
     if (!title.trim() || !description.trim() || !category) {
       setError("Please fill in all fields");
       return;
@@ -42,10 +49,12 @@ export default function CreateSkillPage() {
     setLoading(true);
 
     try {
+      // Now TypeScript knows session is not null
       const data = await skillsService.create({
         title: title.trim(),
         description: description.trim(),
         categoryId: category,
+        userId: session.user.id, // Safe to access after null check
       });
 
       setSuccess(true);

@@ -9,6 +9,11 @@
   --primary-hover: #2563eb;
   --text-primary: #171717;
   --text-secondary: #6b7280;
+  /* Move theme variables here instead of using @theme */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, monospace;
 }
 
 :root[class~="dark"] {
@@ -22,20 +27,13 @@
   --text-secondary: #9ca3af;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 body {
   background: var(--background);
   color: var(--text-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
-/* Add these utility classes */
+/* Utility classes */
 .card {
   background: var(--card-background);
   border-color: var(--card-border);
