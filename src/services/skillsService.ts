@@ -11,7 +11,9 @@ export interface Skill {
     id: string;
     name: string;
   };
-  category: string;
+  category: {
+    name: string;
+  };
 }
 
 export interface CreateSkillData {

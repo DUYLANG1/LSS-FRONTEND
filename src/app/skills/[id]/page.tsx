@@ -87,15 +87,20 @@ export default function SkillDetailPage({
         </div>
       </div>
 
-      <ExchangeModal
-        isOpen={exchangeModalOpen}
-        onClose={() => setExchangeModalOpen(false)}
-        onConfirm={() => {
-          // TODO: Implement exchange request logic
-          setExchangeModalOpen(false);
-        }}
-        userName={skill.user.name}
-      />
+      // Update the ExchangeModal usage in the skill detail page
+      {/* The ExchangeModal component with proper props */}
+            {/* <ExchangeModal
+              isOpen={exchangeModalOpen}
+              onClose={() => setExchangeModalOpen(false)}
+              skillOwnerId={skill.userId}
+              requestedSkillId={skill.id}
+              requestedSkillTitle={skill.title}
+            />
+      onConfirm={() => {
+        // TODO: Implement exchange request logic
+        setExchangeModalOpen(false);
+      }}
+      userName={skill.user.name} */}
     </div>
   );
 }

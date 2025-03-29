@@ -1,30 +1,85 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light theme colors */
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card-background: #ffffff;
-  --card-border: #e5e7eb;
+  --card-border: #e2e8f0;
   --primary: #3b82f6;
   --primary-hover: #2563eb;
-  --text-primary: #171717;
-  --text-secondary: #6b7280;
-  /* Move theme variables here instead of using @theme */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  
+  /* Status colors - light theme */
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --success-border: #bbf7d0;
+  --error-bg: #fee2e2;
+  --error-text: #b91c1c;
+  --error-border: #fecaca;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+  --warning-border: #fde68a;
+  --info-bg: #dbeafe;
+  --info-text: #1e40af;
+  --info-border: #bfdbfe;
+  
+  /* Form elements */
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-text: #0f172a;
+  --input-placeholder: #94a3b8;
+  --input-focus-ring: rgba(59, 130, 246, 0.5);
+  
+  /* System variables */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, monospace;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 :root[class~="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card-background: #1a1a1a;
-  --card-border: #2d2d2d;
+  /* Dark theme colors */
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card-background: #1e293b;
+  --card-border: #334155;
   --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --text-primary: #ededed;
-  --text-secondary: #9ca3af;
+  --primary-hover: #60a5fa;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  
+  /* Status colors - dark theme */
+  --success-bg: rgba(22, 101, 52, 0.2);
+  --success-text: #86efac;
+  --success-border: rgba(134, 239, 172, 0.2);
+  --error-bg: rgba(185, 28, 28, 0.2);
+  --error-text: #fca5a5;
+  --error-border: rgba(252, 165, 165, 0.2);
+  --warning-bg: rgba(146, 64, 14, 0.2);
+  --warning-text: #fcd34d;
+  --warning-border: rgba(252, 211, 77, 0.2);
+  --info-bg: rgba(30, 64, 175, 0.2);
+  --info-text: #93c5fd;
+  --info-border: rgba(147, 197, 253, 0.2);
+  
+  /* Form elements */
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-text: #f8fafc;
+  --input-placeholder: #94a3b8;
+  --input-focus-ring: rgba(59, 130, 246, 0.5);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 body {
@@ -37,6 +92,7 @@ body {
 .card {
   background: var(--card-background);
   border-color: var(--card-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .text-secondary {
@@ -49,4 +105,45 @@ body {
 
 .hover-primary:hover {
   background: var(--primary-hover);
+}
+
+/* Form styling */
+input, select, textarea {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--input-text);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
+}
+
+/* Status badge styles */
+.status-pending {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.status-accepted {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+
+.status-rejected {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+.status-completed {
+  background-color: var(--info-bg);
+  color: var(--info-text);
+  border-color: var(--info-border);
 }

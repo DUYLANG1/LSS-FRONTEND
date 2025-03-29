@@ -1,13 +1,20 @@
+import { UserAvatar } from "@/components/user/UserAvatar";
+import { Card, CardBody } from "@/components/common/Card";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { Button } from "@/components/common/Button";
+
 interface ExchangeRequestProps {
   fromUser: {
     name: string;
     avatar: string;
     offeredSkill: string;
+    id?: string;
   };
   toUser: {
     name: string;
     avatar: string;
     requestedSkill: string;
+    id?: string;
   };
   status: "pending" | "accepted" | "rejected";
   onAccept?: () => void;
@@ -22,66 +29,44 @@ export default function ExchangeRequest({
   onReject,
 }: ExchangeRequestProps) {
   return (
-    <div className="border rounded-lg p-6 shadow-sm">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <img
-            src={fromUser.avatar}
-            alt={fromUser.name}
-            className="w-12 h-12 rounded-full"
-          />
-          <div>
-            <p className="font-medium">{fromUser.name}</p>
-            <p className="text-sm text-gray-600">
-              Offering: {fromUser.offeredSkill}
-            </p>
+    <Card>
+      <CardBody>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+          <div className="flex items-center gap-3">
+            <UserAvatar name={fromUser.name} imageUrl={fromUser.avatar} />
+            <div>
+              <p className="font-medium">{fromUser.name}</p>
+              <p className="text-sm text-gray-600">
+                Offering: {fromUser.offeredSkill}
+              </p>
+            </div>
+          </div>
+          
+          <div className="text-2xl hidden sm:block">↔️</div>
+          
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="font-medium">{toUser.name}</p>
+              <p className="text-sm text-gray-600">
+                Requesting: {toUser.requestedSkill}
+              </p>
+            </div>
+            <UserAvatar name={toUser.name} imageUrl={toUser.avatar} />
           </div>
         </div>
-        <div className="text-2xl">↔️</div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="font-medium">{toUser.name}</p>
-            <p className="text-sm text-gray-600">
-              Requesting: {toUser.requestedSkill}
-            </p>
-          </div>
-          <img
-            src={toUser.avatar}
-            alt={toUser.name}
-            className="w-12 h-12 rounded-full"
-          />
+        
+        <div className="flex justify-end gap-3 mt-4">
+          {status === "pending" && (
+            <>
+              <Button variant="success" onClick={onAccept}>Accept</Button>
+              <Button variant="danger" onClick={onReject}>Reject</Button>
+            </>
+          )}
+          {status !== "pending" && (
+            <StatusBadge status={status} />
+          )}
         </div>
-      </div>
-
-      <div className="flex justify-end gap-3 mt-4">
-        {status === "pending" && (
-          <>
-            <button
-              onClick={onAccept}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Accept
-            </button>
-            <button
-              onClick={onReject}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Reject
-            </button>
-          </>
-        )}
-        {status !== "pending" && (
-          <span
-            className={`px-3 py-1 rounded-full ${
-              status === "accepted"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        )}
-      </div>
-    </div>
+      </CardBody>
+    </Card>
   );
 }

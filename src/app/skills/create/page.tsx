@@ -11,7 +11,7 @@ import {
   FormLabel,
   FormInput,
   FormSelect,
-} from "@/components/skills/FormLabel";
+} from "@/components/skills/FormReuse";
 import { LoadingState } from "@/components/common/LoadingState";
 
 interface CreateSkillForm {

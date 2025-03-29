@@ -98,10 +98,13 @@ export function SkillList({ searchQuery = "", category }: SkillListProps) {
     );
   }
 
+  // The issue is likely in your render method, specifically when mapping through skills
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {skills.map((skill) => (
+          // Make sure you're passing the skill object correctly to SkillCard
+          // and that SkillCard is properly handling the skill object
           <SkillCard key={skill.id} skill={skill} />
         ))}
       </div>

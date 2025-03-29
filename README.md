@@ -1,5 +1,6 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Local Skill Swap project is a website where users can trade skills and services without money
 ## Getting Started
 
 First, run the development server:

@@ -2,6 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { UserRole } from "@/utils/permissions";
+import { Loading } from "@/components/common/Loading";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export function ProtectedRoute({
   const router = useRouter();
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <Loading className="py-10" />;
   }
 
   if (!session?.user) {
