@@ -1,7 +1,28 @@
+import { ReactNode } from "react";
+
+interface BaseFormProps {
+  id: string;
+  error?: string;
+  register: any; // Consider using proper type from react-hook-form
+}
+
 interface FormLabelProps {
   htmlFor: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
+
+interface FormInputProps extends BaseFormProps {
+  placeholder?: string;
+  type?: string;
+}
+
+interface FormSelectProps extends BaseFormProps {
+  options: Array<{ id: string; name: string }>;
+}
+
+const baseInputStyles =
+  "w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]";
+const errorStyles = "mt-1 text-sm text-red-600";
 
 export function FormLabel({ htmlFor, children }: FormLabelProps) {
   return (
@@ -12,14 +33,6 @@ export function FormLabel({ htmlFor, children }: FormLabelProps) {
       {children}
     </label>
   );
-}
-
-interface FormInputProps {
-  register: any;
-  id: string;
-  placeholder?: string;
-  type?: string;
-  error?: string;
 }
 
 export function FormInput({
@@ -36,35 +49,24 @@ export function FormInput({
         type={type}
         id={id}
         placeholder={placeholder}
-        className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
+        className={baseInputStyles}
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className={errorStyles}>{error}</p>}
     </div>
   );
-}
-
-interface FormSelectProps {
-  register: any;
-  id: string;
-  options: Array<{ id: string; name: string }>;
-  error?: string;
 }
 
 export function FormSelect({ register, id, options, error }: FormSelectProps) {
   return (
     <div>
-      <select
-        {...register}
-        id={id}
-        className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
-      >
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.name}
+      <select {...register} id={id} className={baseInputStyles}>
+        {options.map(({ id, name }) => (
+          <option key={id} value={id}>
+            {name}
           </option>
         ))}
       </select>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className={errorStyles}>{error}</p>}
     </div>
   );
 }

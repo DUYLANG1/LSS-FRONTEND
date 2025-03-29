@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { use } from "react";
 import { LoadingState } from "@/components/common/LoadingState";
-import { ErrorState } from "@/components/common/ErrorState";
 import { BackButton } from "@/components/common/BackButton";
 import { UserAvatar } from "@/components/user/UserAvatar";
 import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
@@ -14,19 +14,20 @@ import { useSkill } from "@/hooks/useSkill";
 export default function SkillDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const resolvedParams = use(params);
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
-  const { skill, loading, error } = useSkill(params.id);
+  const { skill, loading, error } = useSkill(resolvedParams.id);
   const { data: session } = useSession();
   const isOwner = session?.user?.id === skill?.userId;
 
   if (loading) return <LoadingState />;
-  if (error || !skill) return <ErrorState error={error} />;
+  if (error || !skill) return error;
 
   return (
     <div className="space-y-8">
-      <BackButton />
+      <BackButton href="/skills" text="Back to Skills" />
 
       <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg overflow-hidden shadow-md">
         <div className="p-6">

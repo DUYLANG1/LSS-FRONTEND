@@ -6,25 +6,40 @@ import { useCategories } from "@/hooks/useCategories";
 import { SkillList } from "@/components/skills/SkillList";
 
 export default function SkillsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { categories, isLoading } = useCategories();
-
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    searchParams.get("category")
+  );
+  const { categories, isLoading } = useCategories();
+  const router = useRouter();
 
-  // Initialize state from URL params
+  // Update state when URL params change
   useEffect(() => {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category");
 
-    setSearchQuery(search);
-    setSelectedCategory(category);
-  }, [searchParams]);
+    if (search !== searchQuery) {
+      setSearchQuery(search);
+    }
+    if (category !== selectedCategory) {
+      setSelectedCategory(category);
+    }
+  }, [searchParams, searchQuery, selectedCategory]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    updateURL();
+  };
 
+  const handleCategoryChange = (category: string | null) => {
+    setSelectedCategory(category);
+    updateURL(category);
+  };
+
+  const updateURL = (newCategory?: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
 
     if (searchQuery) {
@@ -33,34 +48,21 @@ export default function SkillsPage() {
       params.delete("search");
     }
 
-    if (selectedCategory) {
-      params.set("category", selectedCategory);
+    const categoryToUse =
+      newCategory !== undefined ? newCategory : selectedCategory;
+    if (categoryToUse) {
+      params.set("category", categoryToUse);
     } else {
       params.delete("category");
     }
 
-    // Reset to page 1 when search/filter changes
     params.delete("page");
-
     router.push(`/skills?${params.toString()}`);
   };
 
-  const handleCategoryChange = (category: string | null) => {
-    setSelectedCategory(category);
-
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (category) {
-      params.set("category", category);
-    } else {
-      params.delete("category");
-    }
-
-    // Reset to page 1 when filter changes
-    params.delete("page");
-
-    router.push(`/skills?${params.toString()}`);
-  };
+  if (!categories) {
+    return <div className="animate-pulse">Loading categories...</div>;
+  }
 
   return (
     <div className="space-y-8">

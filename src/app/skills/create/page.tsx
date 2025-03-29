@@ -20,6 +20,10 @@ interface CreateSkillForm {
   categoryId: string;
 }
 
+interface CreateSkillData extends CreateSkillForm {
+  userId: string;
+}
+
 export default function CreateSkillPage() {
   const {
     register,
@@ -48,15 +52,35 @@ export default function CreateSkillPage() {
     }
 
     try {
-      const response = await skillsService.create({
-        ...data,
+      const skillData: CreateSkillData = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        categoryId: data.categoryId,
         userId: session.user.id,
-      });
-      reset();
-      router.push(`/skills/${response.id}`);
+      };
+
+      // Log request data for debugging
+      console.log("Sending skill data:", skillData);
+
+      const response = await skillsService.create(skillData);
+
+      if (response.id) {
+        reset();
+        router.push(`/skills/${response.id}`);
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (err) {
+      console.error("Error creating skill:", err);
+
+      // More specific error handling
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred while creating the skill";
+
       setFormError("root", {
-        message: err instanceof Error ? err.message : "Failed to create skill",
+        message: errorMessage,
       });
     }
   };
@@ -102,6 +126,7 @@ export default function CreateSkillPage() {
             <FormSelect
               register={register("categoryId", {
                 required: "Please select a category",
+                validate: (value) => !!value || "Category is required",
               })}
               id="categoryId"
               options={categories}
@@ -115,8 +140,8 @@ export default function CreateSkillPage() {
               {...register("description", {
                 required: "Description is required",
                 minLength: {
-                  value: 10,
-                  message: "Description must be at least 10 characters",
+                  value: 5,
+                  message: "Description must be at least 5 characters",
                 },
               })}
               id="description"

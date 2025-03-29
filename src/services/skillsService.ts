@@ -58,21 +58,37 @@ export const skillsService = {
   },
 
   async create(data: CreateSkillData) {
-    const response = await fetch(API_ENDPOINTS.skills.create, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(API_ENDPOINTS.skills.create, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Include cookies if using session auth
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          category: data.categoryId, // Make sure field name matches API expectation
+          userId: data.userId,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to create skill");
+      if (!response.ok) {
+        if (
+          response.headers.get("content-type")?.includes("application/json")
+        ) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to create skill");
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Skill creation error:", error);
+      throw error;
     }
-
-    return response.json();
   },
 
   async getById(id: string) {
