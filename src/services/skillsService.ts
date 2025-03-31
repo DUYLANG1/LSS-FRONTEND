@@ -29,12 +29,15 @@ export interface SkillsResponse {
 }
 
 export const skillsService = {
-  async getAll(params?: Record<string, any>): Promise<SkillsResponse> {
+  // Merged getAll method that handles all parameter types
+  async getAll(params?: Record<string, any> | { page?: number; limit?: number; search?: string; category?: string }): Promise<SkillsResponse> {
     try {
       const searchParams = new URLSearchParams();
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
-          if (value) searchParams.append(key, value.toString());
+          if (value !== undefined && value !== null && value !== '') {
+            searchParams.append(key, value.toString());
+          }
         });
       }
 
@@ -50,7 +53,7 @@ export const skillsService = {
       // Handle empty response gracefully
       return {
         skills: data.skills || [],
-        totalCount: data.meta.total || 0,
+        totalCount: data.meta?.total || 0,
       };
     } catch (error) {
       console.error("Error fetching skills:", error);

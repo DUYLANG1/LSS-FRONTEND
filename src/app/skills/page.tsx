@@ -14,10 +14,12 @@ export default function SkillsPage() {
   );
   const { categories, isLoading } = useCategories();
   const router = useRouter();
-  
+
   // Replace controlled input with refs
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
 
   // Update state when URL params change
   useEffect(() => {
@@ -28,9 +30,9 @@ export default function SkillsPage() {
     if (searchInputRef.current && search !== searchInputRef.current.value) {
       searchInputRef.current.value = search;
     }
-    
+
     setSearchQuery(search);
-    
+
     if (category !== selectedCategory) {
       setSelectedCategory(category);
     }
@@ -45,6 +47,7 @@ export default function SkillsPage() {
   };
 
   const handleCategoryChange = (category: string | null) => {
+    console.log("Category changed to:", category); // Add this debug line
     setSelectedCategory(category);
     // Get current search value from ref
     const searchValue = searchInputRef.current?.value || "";
@@ -55,16 +58,17 @@ export default function SkillsPage() {
     const params = new URLSearchParams(searchParams.toString());
 
     // Use the provided search value or get it from the ref
-    const searchToUse = newSearch !== undefined 
-      ? newSearch 
-      : searchInputRef.current?.value || "";
-      
+    const searchToUse =
+      newSearch !== undefined ? newSearch : searchInputRef.current?.value || "";
+
+    // Only set search param if there's actually a search value
     if (searchToUse) {
       params.set("search", searchToUse);
     } else {
       params.delete("search");
     }
 
+    // Handle category parameter separately from search
     const categoryToUse =
       newCategory !== undefined ? newCategory : selectedCategory;
     if (categoryToUse) {
@@ -87,10 +91,7 @@ export default function SkillsPage() {
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           Browse Skills
         </h1>
-        <Button 
-          variant="primary"
-          onClick={() => router.push("/skills/create")}
-        >
+        <Button variant="primary" onClick={() => router.push("/skills/create")}>
           Share Your Skill
         </Button>
       </div>
@@ -126,10 +127,7 @@ export default function SkillsPage() {
               </select>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-            >
+            <Button type="submit" variant="primary">
               Search
             </Button>
           </form>

@@ -18,13 +18,40 @@ export function SkillList({ searchQuery = "", category }: SkillListProps) {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 12;
 
+  // Add this state to store previous skills while loading new ones
+  const [previousSkills, setPreviousSkills] = useState<Skill[]>([]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Add a debounce delay to prevent rapid loading states
+  const [debouncedLoading, setDebouncedLoading] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      // Delay showing loading state to prevent flicker on quick responses
+      timer = setTimeout(() => {
+        setDebouncedLoading(true);
+      }, 300); // Only show loading indicator after 300ms
+    } else {
+      setDebouncedLoading(false);
+    }
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [loading]);
 
   useEffect(() => {
     async function loadSkills() {
       try {
         setLoading(true);
+        // Store current skills before fetching new ones
+        if (skills.length > 0) {
+          setPreviousSkills(skills);
+        }
+
         const params: any = {
           page,
           limit,
@@ -42,7 +69,18 @@ export function SkillList({ searchQuery = "", category }: SkillListProps) {
         setError("Failed to load skills. Please try again later.");
         console.error(err);
       } finally {
-        setLoading(false);
+        // Add a minimum loading time to prevent rapid flashing
+        const minLoadingTime = 300;
+        const loadingStartTime = Date.now();
+        const timeElapsed = Date.now() - loadingStartTime;
+
+        if (timeElapsed < minLoadingTime) {
+          setTimeout(() => {
+            setLoading(false);
+          }, minLoadingTime - timeElapsed);
+        } else {
+          setLoading(false);
+        }
       }
     }
 
@@ -58,7 +96,8 @@ export function SkillList({ searchQuery = "", category }: SkillListProps) {
     router.push(`/skills?${params.toString()}`);
   };
 
-  if (loading && page === 1) {
+  // Modify the loading condition to only show skeleton on first load
+  if (loading && page === 1 && previousSkills.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 9 }).map((_, index) => (
@@ -98,17 +137,26 @@ export function SkillList({ searchQuery = "", category }: SkillListProps) {
     );
   }
 
-  // The issue is likely in your render method, specifically when mapping through skills
+  // Define the displaySkills variable here
+  const displaySkills = loading && skills.length > 0 ? previousSkills : skills;
+
+  // Use debounced loading state for the indicator
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {skills.map((skill) => (
-          // Make sure you're passing the skill object correctly to SkillCard
-          // and that SkillCard is properly handling the skill object
+        {displaySkills.map((skill) => (
           <SkillCard key={skill.id} skill={skill} />
         ))}
       </div>
 
+      {/* Use debounced loading for smoother transitions */}
+      {debouncedLoading && (
+        <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg transition-opacity duration-300">
+          Loading...
+        </div>
+      )}
+
+      {/* Pagination controls */}
       {totalPages > 1 && (
         <div className="flex justify-center mt-8">
           <nav className="flex items-center space-x-2">
