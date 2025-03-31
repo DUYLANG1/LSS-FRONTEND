@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, forwardRef } from "react";
 
 interface BaseFormProps {
   id: string;
   error?: string;
-  register: any; // Consider using proper type from react-hook-form
+  name: string;
 }
 
 interface FormLabelProps {
@@ -14,15 +14,17 @@ interface FormLabelProps {
 interface FormInputProps extends BaseFormProps {
   placeholder?: string;
   type?: string;
+  defaultValue?: string;
 }
 
 interface FormSelectProps extends BaseFormProps {
   options: Array<{ id: string; name: string }>;
+  defaultValue?: string;
 }
 
 const baseInputStyles =
-  "w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]";
-const errorStyles = "mt-1 text-sm text-red-600";
+  "w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--input-bg)] text-[var(--input-text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent";
+const errorStyles = "mt-1 text-sm text-red-600 dark:text-red-400";
 
 export function FormLabel({ htmlFor, children }: FormLabelProps) {
   return (
@@ -35,38 +37,46 @@ export function FormLabel({ htmlFor, children }: FormLabelProps) {
   );
 }
 
-export function FormInput({
-  register,
-  id,
-  placeholder,
-  type = "text",
-  error,
-}: FormInputProps) {
-  return (
-    <div>
-      <input
-        {...register}
-        type={type}
-        id={id}
-        placeholder={placeholder}
-        className={baseInputStyles}
-      />
-      {error && <p className={errorStyles}>{error}</p>}
-    </div>
-  );
-}
+export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
+  ({ id, name, placeholder, type = "text", error, defaultValue }, ref) => {
+    return (
+      <div>
+        <input
+          ref={ref}
+          type={type}
+          id={id}
+          name={name}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          className={baseInputStyles}
+        />
+        {error && <p className={errorStyles}>{error}</p>}
+      </div>
+    );
+  }
+);
+FormInput.displayName = "FormInput";
 
-export function FormSelect({ register, id, options, error }: FormSelectProps) {
-  return (
-    <div>
-      <select {...register} id={id} className={baseInputStyles}>
-        {options.map(({ id, name }) => (
-          <option key={id} value={id}>
-            {name}
-          </option>
-        ))}
-      </select>
-      {error && <p className={errorStyles}>{error}</p>}
-    </div>
-  );
-}
+export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
+  ({ id, name, options, error, defaultValue }, ref) => {
+    return (
+      <div>
+        <select
+          ref={ref}
+          id={id}
+          name={name}
+          defaultValue={defaultValue}
+          className={baseInputStyles}
+        >
+          {options.map(({ id, name }) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </select>
+        {error && <p className={errorStyles}>{error}</p>}
+      </div>
+    );
+  }
+);
+FormSelect.displayName = "FormSelect";

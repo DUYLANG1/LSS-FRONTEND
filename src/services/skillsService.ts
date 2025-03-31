@@ -41,7 +41,6 @@ export const skillsService = {
       const response = await fetch(
         `${API_ENDPOINTS.skills.list}?${searchParams.toString()}`
       );
-      console.log("searchParams", searchParams);
 
       if (!response.ok) {
         throw new Error("Failed to fetch skills");

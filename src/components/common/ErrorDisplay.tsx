@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ErrorDisplayProps {
-  error: string | null;
+  error: string | null | undefined;
   className?: string;
 }
 

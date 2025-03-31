@@ -1,49 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 import { SkillList } from "@/components/skills/SkillList";
+import { Button } from "@/components/common/Button";
+import { Card, CardBody } from "@/components/common/Card";
 
 export default function SkillsPage() {
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || ""
-  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     searchParams.get("category")
   );
   const { categories, isLoading } = useCategories();
   const router = useRouter();
+  
+  // Replace controlled input with refs
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 
   // Update state when URL params change
   useEffect(() => {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category");
 
-    if (search !== searchQuery) {
-      setSearchQuery(search);
+    // Update the search input value directly
+    if (searchInputRef.current && search !== searchInputRef.current.value) {
+      searchInputRef.current.value = search;
     }
+    
+    setSearchQuery(search);
+    
     if (category !== selectedCategory) {
       setSelectedCategory(category);
     }
-  }, [searchParams, searchQuery, selectedCategory]);
+  }, [searchParams, selectedCategory]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    updateURL();
+    // Get value directly from ref
+    const searchValue = searchInputRef.current?.value || "";
+    setSearchQuery(searchValue);
+    updateURL(selectedCategory, searchValue);
   };
 
   const handleCategoryChange = (category: string | null) => {
     setSelectedCategory(category);
-    updateURL(category);
+    // Get current search value from ref
+    const searchValue = searchInputRef.current?.value || "";
+    updateURL(category, searchValue);
   };
 
-  const updateURL = (newCategory?: string | null) => {
+  const updateURL = (newCategory?: string | null, newSearch?: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (searchQuery) {
-      params.set("search", searchQuery);
+    // Use the provided search value or get it from the ref
+    const searchToUse = newSearch !== undefined 
+      ? newSearch 
+      : searchInputRef.current?.value || "";
+      
+    if (searchToUse) {
+      params.set("search", searchToUse);
     } else {
       params.delete("search");
     }
@@ -70,52 +87,54 @@ export default function SkillsPage() {
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           Browse Skills
         </h1>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        <Button 
+          variant="primary"
           onClick={() => router.push("/skills/create")}
         >
           Share Your Skill
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg p-4">
-        <form
-          onSubmit={handleSearch}
-          className="flex flex-col md:flex-row gap-4"
-        >
-          <div className="flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for skills..."
-              className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
-            />
-          </div>
-
-          <div className="w-full md:w-64">
-            <select
-              value={selectedCategory || ""}
-              onChange={(e) => handleCategoryChange(e.target.value || null)}
-              className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
-            >
-              <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+      <Card>
+        <CardBody>
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-4"
           >
-            Search
-          </button>
-        </form>
-      </div>
+            <div className="flex-1">
+              <input
+                type="text"
+                ref={searchInputRef}
+                defaultValue={searchQuery}
+                placeholder="Search for skills..."
+                className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
+              />
+            </div>
+
+            <div className="w-full md:w-64">
+              <select
+                value={selectedCategory || ""}
+                onChange={(e) => handleCategoryChange(e.target.value || null)}
+                className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)]"
+              >
+                <option value="">All Categories</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+            >
+              Search
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
 
       {isLoading ? (
         <div className="animate-pulse flex space-x-4">
@@ -134,12 +153,12 @@ export default function SkillsPage() {
               <span className="mr-2 text-[var(--text-secondary)]">
                 Filtered by:
               </span>
-              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center">
+              <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 px-2 py-1 rounded-full text-sm flex items-center">
                 {categories.find((c) => c.id === selectedCategory)?.name ||
                   selectedCategory}
                 <button
                   onClick={() => handleCategoryChange(null)}
-                  className="ml-2 text-blue-500 hover:text-blue-700"
+                  className="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100"
                 >
                   ×
                 </button>

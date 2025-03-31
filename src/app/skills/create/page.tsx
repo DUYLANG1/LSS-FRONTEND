@@ -12,7 +12,9 @@ import {
   FormInput,
   FormSelect,
 } from "@/components/skills/FormReuse";
-import { LoadingState } from "@/components/common/LoadingState";
+import { Skeleton } from "@/components/common/Skeleton";
+import { Button } from "@/components/common/Button";
+import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
 interface CreateSkillForm {
   title: string;
@@ -86,7 +88,7 @@ export default function CreateSkillPage() {
   };
 
   if (status === "loading" || isLoading) {
-    return <LoadingState />;
+    return <Skeleton variant="card" count={3} className="max-w-2xl mx-auto" />;
   }
 
   return (
@@ -100,15 +102,13 @@ export default function CreateSkillPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {errors.root && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {errors.root.message}
-            </div>
+            <ErrorDisplay error={errors.root.message || null} />
           )}
 
           <div>
             <FormLabel htmlFor="title">Skill Title *</FormLabel>
             <FormInput
-              register={register("title", {
+              {...register("title", {
                 required: "Title is required",
                 minLength: {
                   value: 3,
@@ -116,6 +116,7 @@ export default function CreateSkillPage() {
                 },
               })}
               id="title"
+              name="title"
               placeholder="What skill can you teach?"
               error={errors.title?.message}
             />
@@ -124,11 +125,12 @@ export default function CreateSkillPage() {
           <div>
             <FormLabel htmlFor="categoryId">Category *</FormLabel>
             <FormSelect
-              register={register("categoryId", {
+              {...register("categoryId", {
                 required: "Please select a category",
                 validate: (value) => !!value || "Category is required",
               })}
               id="categoryId"
+              name="categoryId"
               options={categories}
               error={errors.categoryId?.message}
             />
@@ -157,17 +159,14 @@ export default function CreateSkillPage() {
           </div>
 
           <div className="flex justify-end">
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className={`px-4 py-2 rounded-lg ${
-                isSubmitting
-                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
+              isLoading={isSubmitting}
+              variant="primary"
             >
-              {isSubmitting ? "Creating..." : "Create Skill"}
-            </button>
+              Create Skill
+            </Button>
           </div>
         </form>
       </div>

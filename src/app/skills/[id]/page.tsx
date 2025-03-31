@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { use } from "react";
-import { LoadingState } from "@/components/common/LoadingState";
+import { Skeleton } from "@/components/common/Skeleton";
 import { BackButton } from "@/components/common/BackButton";
 import { UserAvatar } from "@/components/user/UserAvatar";
 import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
@@ -22,13 +22,12 @@ export default function SkillDetailPage({
   const { data: session } = useSession();
   const isOwner = session?.user?.id === skill?.userId;
 
-  if (loading) return <LoadingState />;
+  if (loading) return <Skeleton />;
   if (error || !skill) return error;
 
   return (
     <div className="space-y-8">
       <BackButton href="/skills" text="Back to Skills" />
-
       <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg overflow-hidden shadow-md">
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
@@ -86,10 +85,9 @@ export default function SkillDetailPage({
           </div>
         </div>
       </div>
-
       // Update the ExchangeModal usage in the skill detail page
       {/* The ExchangeModal component with proper props */}
-            {/* <ExchangeModal
+      {/* <ExchangeModal
               isOpen={exchangeModalOpen}
               onClose={() => setExchangeModalOpen(false)}
               skillOwnerId={skill.userId}
