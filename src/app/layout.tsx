@@ -1,7 +1,7 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
-import AuthProviders from "@/components/providers/Providers";
+import AuthProviders from "@/components/providers/AuthProviders";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const geist = Geist({
