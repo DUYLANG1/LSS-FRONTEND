@@ -6,6 +6,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { SkillList } from "@/components/skills/SkillList";
 import { Button } from "@/components/common/Button";
 import { Card, CardBody } from "@/components/common/Card";
+import { useSession } from "next-auth/react";
 
 export default function SkillsPage() {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ export default function SkillsPage() {
   );
   const { categories, isLoading } = useCategories();
   const router = useRouter();
+  const { data: session } = useSession();
 
   // Replace controlled input with refs
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -85,13 +87,21 @@ export default function SkillsPage() {
     return <div className="animate-pulse">Loading categories...</div>;
   }
 
+  const handleCreateSkill = () => {
+    if (!session) {
+      router.push("/auth/signin?callbackUrl=/skills/create");
+    } else {
+      router.push("/skills/create");
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           Browse Skills
         </h1>
-        <Button variant="primary" onClick={() => router.push("/skills/create")}>
+        <Button variant="primary" onClick={handleCreateSkill}>
           Share Your Skill
         </Button>
       </div>

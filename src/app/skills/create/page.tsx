@@ -2,88 +2,135 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { skillsService } from "@/services/skillsService";
+import { useRef, FormEvent, useEffect } from "react";
+import { Skill, skillsService } from "@/services/skillsService";
 import { useCategories } from "@/hooks/useCategories";
-import { useEffect } from "react";
 import { BackButton } from "@/components/common/BackButton";
 import {
   FormLabel,
   FormInput,
   FormSelect,
+  FormTextArea,
 } from "@/components/skills/FormReuse";
 import { Skeleton } from "@/components/common/Skeleton";
 import { Button } from "@/components/common/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
-interface CreateSkillForm {
+interface CreateSkillData {
   title: string;
   description: string;
   categoryId: string;
-}
-
-interface CreateSkillData extends CreateSkillForm {
   userId: string;
 }
 
-export default function CreateSkillPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError: setFormError,
-    reset,
-  } = useForm<CreateSkillForm>();
+interface CreateSkillPageProps {
+  initialData?: Skill;
+}
+
+export default function CreateSkillPage({ initialData }: CreateSkillPageProps) {
+  // Create refs for form elements
+  const titleRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const errorRef = useRef<string | null>(null);
 
   const router = useRouter();
   const { data: session, status } = useSession();
   const { categories, isLoading } = useCategories();
 
+  // Initialize form with initialData
+  useEffect(() => {
+    if (initialData) {
+      if (titleRef.current) titleRef.current.value = initialData.title;
+      if (descriptionRef.current)
+        descriptionRef.current.value = initialData.description;
+      if (categoryRef.current)
+        categoryRef.current.value = initialData.categoryId;
+    }
+  }, [initialData]);
+
+  // First useEffect for authentication check
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin?callbackUrl=/skills/create");
     }
   }, [status, router]);
 
-  const onSubmit = async (data: CreateSkillForm) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Clear previous errors
+    errorRef.current = null;
+
+    // Get values from refs
+    const title = titleRef.current?.value?.trim() || "";
+    const categoryId = categoryRef.current?.value || "";
+    const description = descriptionRef.current?.value?.trim() || "";
+
+    // Validate form
+    if (!title) {
+      errorRef.current = "Title is required";
+      return;
+    }
+
+    if (title.length < 2) {
+      errorRef.current = "Title must be at least 2 characters";
+      return;
+    }
+
+    if (!categoryId) {
+      errorRef.current = "Please select a category";
+      return;
+    }
+
+    if (!description) {
+      errorRef.current = "Description is required";
+      return;
+    }
+
+    if (description.length < 5) {
+      errorRef.current = "Description must be at least 5 characters";
+      return;
+    }
+
     if (!session?.user?.id) {
-      setFormError("root", {
-        message: "You must be logged in to create a skill",
-      });
+      errorRef.current = "You must be logged in to create a skill";
       return;
     }
 
     try {
       const skillData: CreateSkillData = {
-        title: data.title.trim(),
-        description: data.description.trim(),
-        categoryId: data.categoryId,
+        title: titleRef.current?.value?.trim() || "",
+        description: descriptionRef.current?.value?.trim() || "",
+        categoryId: categoryRef.current?.value || "",
         userId: session.user.id,
       };
 
-      // Log request data for debugging
-      console.log("Sending skill data:", skillData);
-
-      const response = await skillsService.create(skillData);
+      let response;
+      if (initialData) {
+        // Update existing skill
+        response = await skillsService.update(initialData.id, skillData);
+      } else {
+        // Create new skill
+        response = await skillsService.create(skillData);
+      }
 
       if (response.id) {
-        reset();
+        // Reset form
+        if (titleRef.current) titleRef.current.value = "";
+        if (categoryRef.current) categoryRef.current.value = "";
+        if (descriptionRef.current) descriptionRef.current.value = "";
+
         router.push(`/skills/${response.id}`);
-      } else {
-        throw new Error("Invalid response from server");
       }
     } catch (err) {
       console.error("Error creating skill:", err);
 
       // More specific error handling
-      const errorMessage =
+      errorRef.current =
         err instanceof Error
           ? err.message
           : "An unexpected error occurred while creating the skill";
-
-      setFormError("root", {
-        message: errorMessage,
-      });
     }
   };
 
@@ -92,80 +139,94 @@ export default function CreateSkillPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <BackButton href="/skills" text="Back to Skills" />
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <BackButton
+        href="/skills"
+        text="Back to Skills"
+        className="mb-6 hover:text-[var(--text-primary)] transition-colors"
+      />
 
-      <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-lg p-6 shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-[var(--text-primary)]">
-          Share Your Skill
-        </h1>
+      <div className="bg-[var(--card-background)] border border-[var(--card-border)] rounded-xl p-8 shadow-lg">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
+            {initialData ? "Edit Your Skill" : "Share Your Skill"}
+          </h1>
+          <p className="text-[var(--text-secondary)]">
+            {initialData
+              ? "Update your skill details below"
+              : "Fill out the form below to share your skill with the community"}
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {errors.root && (
-            <ErrorDisplay error={errors.root.message || null} />
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {errorRef.current && (
+            <ErrorDisplay
+              error={errorRef.current}
+              className="animate-fade-in"
+            />
           )}
 
-          <div>
-            <FormLabel htmlFor="title">Skill Title *</FormLabel>
-            <FormInput
-              {...register("title", {
-                required: "Title is required",
-                minLength: {
-                  value: 3,
-                  message: "Title must be at least 3 characters",
-                },
-              })}
-              id="title"
-              name="title"
-              placeholder="What skill can you teach?"
-              error={errors.title?.message}
-            />
-          </div>
-
-          <div>
-            <FormLabel htmlFor="categoryId">Category *</FormLabel>
+          <div className="space-y-2">
+            <FormLabel htmlFor="category" className="text-lg font-medium">
+              Category <span className="text-red-500">*</span>
+            </FormLabel>
             <FormSelect
-              {...register("categoryId", {
-                required: "Please select a category",
-                validate: (value) => !!value || "Category is required",
-              })}
-              id="categoryId"
-              name="categoryId"
-              options={categories}
-              error={errors.categoryId?.message}
+              ref={categoryRef}
+              id="category"
+              name="category"
+              options={categories.map((c) => ({ id: c.id, name: c.name }))}
+              required
+              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
+            <p className="text-sm text-[var(--text-secondary)]">
+              Select the most relevant category for your skill
+            </p>
           </div>
 
-          <div>
-            <FormLabel htmlFor="description">Description *</FormLabel>
-            <textarea
-              {...register("description", {
-                required: "Description is required",
-                minLength: {
-                  value: 5,
-                  message: "Description must be at least 5 characters",
-                },
-              })}
-              id="description"
-              placeholder="Describe the skill you can teach, your experience level, and what you'd like to learn in exchange."
-              className="w-full p-2 border border-[var(--card-border)] rounded-lg bg-[var(--background)] min-h-[150px]"
-              rows={6}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.description.message}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <FormLabel htmlFor="title" className="text-lg font-medium">
+                Skill Title <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormInput
+                ref={titleRef}
+                id="title"
+                name="title"
+                placeholder="e.g. JavaScript Programming, Guitar Lessons"
+                required
+                className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+              <p className="text-sm text-[var(--text-secondary)]">
+                Be specific about what skill you're offering (min. 3 characters)
               </p>
-            )}
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel htmlFor="description" className="text-lg font-medium">
+                Description <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormTextArea
+                ref={descriptionRef}
+                id="description"
+                name="description"
+                placeholder="Describe your skill in detail. Include your experience level, teaching approach, and any requirements."
+                required
+                className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[150px]"
+                rows={6}
+              />
+              <p className="text-sm text-[var(--text-secondary)]">
+                Detailed descriptions get more interest (min. 5 characters)
+              </p>
+            </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="pt-6 border-t border-[var(--card-border)] flex justify-end">
             <Button
               type="submit"
-              disabled={isSubmitting}
-              isLoading={isSubmitting}
               variant="primary"
+              className="w-full sm:w-auto px-6 py-3 text-lg font-medium transition-all hover:shadow-md"
             >
-              Create Skill
+              {initialData ? "Update Skill" : "Publish Skill"}
             </Button>
           </div>
         </form>

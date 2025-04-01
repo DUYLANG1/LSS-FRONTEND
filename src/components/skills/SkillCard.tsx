@@ -5,57 +5,82 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function SkillCard({ skill }: { skill: Skill }) {
   const [isHovered, setIsHovered] = useState(false);
   const { data: session } = useSession();
   const isOwner = session?.user?.id === skill.userId;
+  const router = useRouter();
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(`/skills/edit/${skill.id}`);
+  };
 
   return (
     <Link href={`/skills/${skill.id}`}>
-      <div className="border rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full">
-        {/* Make sure you're accessing properties of the skill object, not rendering the object itself */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{skill.title}</h3>
-          {/* Make sure other places where you use skill properties are correct */}
-        </div>
-        
-        {/* Check any other places where you might be accidentally rendering the entire skill object */}
-        <p className="text-sm text-gray-600 mt-2">{skill.description}</p>
-        
-        {/* If you have a category display, make sure it's accessing the property correctly */}
-        {skill.category && (
-          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full mt-2 inline-block">
-            {typeof skill.category === 'object' ? skill.category.name : skill.category}
+      <div
+        className={`border rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full ${
+          isOwner
+            ? "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/50"
+            : "bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900"
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+            {skill.title}
+          </h3>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {formatDistanceToNow(new Date(skill.createdAt), {
+              addSuffix: true,
+            })}
           </span>
-        )}
-        
-        <div className="flex items-center justify-between">
+        </div>
+
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 mb-4 line-clamp-2">
+          {skill.description}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {skill.category && (
+            <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-3 py-1 rounded-full inline-flex items-center">
+              {typeof skill.category === "object"
+                ? skill.category.name
+                : skill.category}
+            </span>
+          )}
+
+          {/* Removed the skill level indicator that was causing the error */}
+        </div>
+
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium shadow-sm">
               {skill.user.name[0].toUpperCase()}
             </div>
-            <span className="ml-2 text-sm font-medium text-[var(--text-primary)]">
-              {skill.user.name}
-            </span>
           </div>
 
           <button
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-opacity ${
-              isHovered ? "opacity-100" : "opacity-0"
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              isHovered ? "scale-105" : "scale-100"
             } ${
-              isOwner ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white"
+              isOwner
+                ? "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                : "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500"
             }`}
             onClick={(e) => {
               e.preventDefault();
               if (isOwner) {
-                // Handle edit
+                handleEdit(e);
               } else {
                 // Handle request exchange
               }
             }}
           >
-            {isOwner ? "Edit" : "Request"}
+            {isOwner ? "Edit" : "Request Exchange"}
           </button>
         </div>
       </div>

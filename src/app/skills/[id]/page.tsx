@@ -32,10 +32,7 @@ export default function SkillDetailPage({
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mb-2">
-                {skill.categoryId}
-              </span>
-              <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+              <h1 className="text-2xl font-bold text-teal-200">
                 {skill.title}
               </h1>
             </div>
@@ -56,9 +53,6 @@ export default function SkillDetailPage({
             <div className="flex items-center">
               <UserAvatar name={skill.user.name} />
               <div className="ml-3">
-                <p className="font-medium text-[var(--text-primary)]">
-                  {skill.user.name}
-                </p>
                 <p className="text-sm text-[var(--text-secondary)]">
                   Skill Sharer
                 </p>
@@ -68,7 +62,7 @@ export default function SkillDetailPage({
             {isOwner ? (
               <div className="space-x-2">
                 <Link
-                  href={`/skills/${skill.id}/edit`}
+                  href={`/skills/edit/${skill.id}`}
                   className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
                 >
                   Edit Skill
@@ -85,20 +79,6 @@ export default function SkillDetailPage({
           </div>
         </div>
       </div>
-      // Update the ExchangeModal usage in the skill detail page
-      {/* The ExchangeModal component with proper props */}
-      {/* <ExchangeModal
-              isOpen={exchangeModalOpen}
-              onClose={() => setExchangeModalOpen(false)}
-              skillOwnerId={skill.userId}
-              requestedSkillId={skill.id}
-              requestedSkillTitle={skill.title}
-            />
-      onConfirm={() => {
-        // TODO: Implement exchange request logic
-        setExchangeModalOpen(false);
-      }}
-      userName={skill.user.name} */}
     </div>
   );
 }

@@ -7,6 +7,7 @@ export interface Skill {
   categoryId: string;
   userId: string;
   createdAt: string;
+  level?: string; // Added optional level property
   user: {
     id: string;
     name: string;
@@ -30,12 +31,16 @@ export interface SkillsResponse {
 
 export const skillsService = {
   // Merged getAll method that handles all parameter types
-  async getAll(params?: Record<string, any> | { page?: number; limit?: number; search?: string; category?: string }): Promise<SkillsResponse> {
+  async getAll(
+    params?:
+      | Record<string, any>
+      | { page?: number; limit?: number; search?: string; category?: string }
+  ): Promise<SkillsResponse> {
     try {
       const searchParams = new URLSearchParams();
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
+          if (value !== undefined && value !== null && value !== "") {
             searchParams.append(key, value.toString());
           }
         });
@@ -104,4 +109,26 @@ export const skillsService = {
 
     return response.json();
   },
+
+  async update(id: string, data: CreateSkillData) {
+    try {
+      const response = await fetch(API_ENDPOINTS.skills.update(id), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update skill");
+      }
+  
+      return response.json();
+    } catch (error) {
+      console.error("Error updating skill:", error);
+      throw error;
+    }
+  }
 };

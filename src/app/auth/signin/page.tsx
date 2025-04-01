@@ -28,7 +28,7 @@ export default function SignIn() {
       if (res?.error) {
         setError(res.error);
       } else {
-        const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+        const callbackUrl = searchParams.get("callbackUrl") || "/skills/create";
         router.push(callbackUrl);
       }
     } catch (err) {
@@ -92,7 +92,7 @@ export default function SignIn() {
 
         <div className="grid grid-cols-1 gap-4">
           <button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/skills/create" })}
             className="flex items-center justify-center px-4 py-2 border rounded-lg hover:bg-gray-50"
           >
             <img src="/google.svg" alt="Google" className="w-5 h-5 mr-2" />

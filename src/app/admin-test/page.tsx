@@ -1,5 +1,4 @@
 "use client";
-import { Dashboard } from "@/components/dashboard/Dashboard";
 import { UserRole } from "@/utils/permissions";
 import { useState } from "react";
 
@@ -38,8 +37,6 @@ export default function AdminTest() {
           Member View
         </button>
       </div>
-
-      <Dashboard userRole={role} {...mockData} />
     </div>
   );
 }

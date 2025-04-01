@@ -1,16 +1,15 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import ExchangeRequest from "@/components/exchanges/ExchangeRequest";
-import { LoadingState } from "@/components/common/LoadingState";
+import ExchangeRequests from "@/components/exchanges/ExchangeRequests";
+import { Loading } from "@/components/common/Loading";
 import { useExchanges } from "@/hooks/useExchanges";
-import { UserAvatar } from "@/components/user/UserAvatar";
 
 export default function ExchangesPage() {
   const { data: session } = useSession();
   const { exchanges, loading, error, respondToExchange } = useExchanges();
 
-  if (loading) return <LoadingState />;
+  if (loading) return <Loading />;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!session) return <div>Please sign in to view your exchanges</div>;
 
@@ -28,7 +27,7 @@ export default function ExchangesPage() {
             <h2 className="text-xl font-semibold mb-4">Pending Requests</h2>
             <div className="space-y-4">
               {pendingExchanges.map((exchange) => (
-                <ExchangeRequest
+                <ExchangeRequests
                   key={exchange.id}
                   fromUser={{
                     name: exchange.fromUser.name,
@@ -57,7 +56,7 @@ export default function ExchangesPage() {
             <h2 className="text-xl font-semibold mb-4">Active Exchanges</h2>
             <div className="space-y-4">
               {activeExchanges.map((exchange) => (
-                <ExchangeRequest
+                <ExchangeRequests
                   key={exchange.id}
                   fromUser={{
                     name: exchange.fromUser.name,

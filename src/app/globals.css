@@ -10,7 +10,7 @@
   --primary-hover: #2563eb;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
-  
+
   /* Status colors - light theme */
   --success-bg: #dcfce7;
   --success-text: #166534;
@@ -24,24 +24,26 @@
   --info-bg: #dbeafe;
   --info-text: #1e40af;
   --info-border: #bfdbfe;
-  
+
   /* Form elements */
   --input-bg: #ffffff;
   --input-border: #e2e8f0;
   --input-text: #0f172a;
   --input-placeholder: #94a3b8;
   --input-focus-ring: rgba(59, 130, 246, 0.5);
-  
+
   /* System variables */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, monospace;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 :root[class~="dark"] {
@@ -54,7 +56,7 @@
   --primary-hover: #60a5fa;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
-  
+
   /* Status colors - dark theme */
   --success-bg: rgba(22, 101, 52, 0.2);
   --success-text: #86efac;
@@ -68,18 +70,20 @@
   --info-bg: rgba(30, 64, 175, 0.2);
   --info-text: #93c5fd;
   --info-border: rgba(147, 197, 253, 0.2);
-  
+
   /* Form elements */
-  --input-bg: #1e293b;
+  --input-bg: #20385e;
   --input-border: #334155;
   --input-text: #f8fafc;
   --input-placeholder: #94a3b8;
   --input-focus-ring: rgba(59, 130, 246, 0.5);
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 body {
@@ -108,17 +112,22 @@ body {
 }
 
 /* Form styling */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: var(--input-bg);
   border-color: var(--input-border);
   color: var(--input-text);
 }
 
-input::placeholder, textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: var(--input-placeholder);
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px var(--input-focus-ring);
 }
