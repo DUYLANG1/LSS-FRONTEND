@@ -78,7 +78,6 @@ export default function EditSkillPage({
           return;
         }
 
-        
         setSkillData(skill);
         const titleFromQuery = searchParams.get("title");
         const descriptionFromQuery = searchParams.get("description");
@@ -101,9 +100,8 @@ export default function EditSkillPage({
           "Failed to load skill details. It might not exist or an error occurred."
         );
       } finally {
-        if (skillData || error) {
-          setLoading(false);
-        }
+        // Remove the conditional check that's causing the infinite loading
+        setLoading(false);
       }
     }
 

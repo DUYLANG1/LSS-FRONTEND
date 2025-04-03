@@ -1,15 +1,13 @@
 import { ReactNode, forwardRef } from "react";
 
-interface BaseFormProps {
+export interface BaseFormProps {
   id: string;
   name: string;
-  error?: string;
-  label?: string;
-  required?: boolean;
   className?: string;
+  required?: boolean;
 }
 
-interface FormLabelProps {
+export interface FormLabelProps {
   htmlFor: string;
   children: ReactNode;
   className?: string;
@@ -20,8 +18,7 @@ interface FormInputProps extends BaseFormProps {
   type?: string;
   placeholder?: string;
   minLength?: number;
-  value?: string;
-  defaultValue?: string; // Add defaultValue property
+  defaultValue?: string;
 }
 
 interface FormSelectProps extends BaseFormProps {
@@ -30,6 +27,28 @@ interface FormSelectProps extends BaseFormProps {
   defaultValue?: string;
 }
 
+interface FormTextAreaProps extends BaseFormProps {
+  placeholder?: string;
+  rows?: number;
+  minLength?: number;
+  defaultValue?: string; // Add defaultValue property
+}
+
+export interface FormFieldWrapperProps {
+  htmlFor: string;
+  label: string;
+  tooltip: string;
+  children: ReactNode;
+  className?: string;
+  required?: boolean;
+}
+
+// Add a utility function at the top of the file
+function cn(...classes: (string | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+// Then use it in your components
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   (
     {
@@ -40,7 +59,6 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
       required,
       className,
       minLength,
-      value,
       defaultValue, // Add defaultValue to destructuring
       ...props
     },
@@ -55,13 +73,13 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         placeholder={placeholder}
         required={required}
         minLength={minLength}
-        value={value}
         defaultValue={defaultValue} // Use the defaultValue prop
-        className={`w-full p-2 border rounded-lg border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--input-text)] 
-          placeholder:text-[var(--input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] 
-          focus:border-transparent transition-all duration-200 ${
-            className || ""
-          }`}
+        className={cn(
+          "w-full p-2 border rounded-lg border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--input-text)]",
+          "placeholder:text-[var(--input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]",
+          "focus:border-transparent transition-all duration-200",
+          className
+        )}
         {...props}
       />
     );
@@ -84,7 +102,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
     },
     ref
   ) => {
-    // Add defaultValue to destructuring
+    // Remove this comment about defaultValue destructuring
     return (
       <select
         ref={ref}
@@ -112,14 +130,6 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(
 
 FormSelect.displayName = "FormSelect";
 
-interface FormTextAreaProps extends BaseFormProps {
-  placeholder?: string;
-  rows?: number;
-  minLength?: number;
-  value?: string;
-  defaultValue?: string; // Add defaultValue property
-}
-
 export const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
   (
     {
@@ -130,7 +140,6 @@ export const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
       required,
       className,
       minLength,
-      value,
       defaultValue, // Add defaultValue to destructuring
       ...props
     },
@@ -145,7 +154,6 @@ export const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
         rows={rows}
         required={required}
         minLength={minLength}
-        value={value}
         defaultValue={defaultValue} // Use the defaultValue prop
         className={`w-full p-2 border rounded-lg border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--input-text)]
           placeholder:text-[var(--input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]
@@ -177,16 +185,6 @@ export function FormLabel({
       {children}
     </label>
   );
-}
-
-// Make sure FormFieldWrapper is properly exported with the 'export' keyword
-export interface FormFieldWrapperProps {
-  htmlFor: string;
-  label: string;
-  tooltip: string;
-  children: ReactNode;
-  className?: string;
-  required?: boolean;
 }
 
 export function FormFieldWrapper({
