@@ -25,6 +25,39 @@ interface FormSelectProps extends BaseFormProps {
   options: Array<{ id: string; name: string }>;
 }
 
+interface FormFieldWrapperProps {
+  htmlFor: string;
+  label: string;
+  tooltip: string;
+  children: ReactNode;
+  className?: string;
+  required?: boolean; // Add required prop
+}
+
+export function FormFieldWrapper({
+  htmlFor,
+  label,
+  tooltip,
+  children,
+  className,
+  required = false, // Default to false
+}: FormFieldWrapperProps) {
+  return (
+    <div className={`relative group ${className || ""}`}>
+      <label
+        htmlFor={htmlFor}
+        className="block text-[var(--text-primary)] font-medium mb-2"
+      >
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+      <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 shadow-lg z-10">
+        {tooltip}
+      </div>
+    </div>
+  );
+}
+
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   (
     { id, name, type = "text", placeholder, required, className, ...props },
@@ -106,7 +139,12 @@ export const FormTextArea = forwardRef<HTMLTextAreaElement, FormTextAreaProps>(
 
 FormTextArea.displayName = "FormTextArea";
 
-export function FormLabel({ htmlFor, children, className, title }: FormLabelProps) {
+export function FormLabel({
+  htmlFor,
+  children,
+  className,
+  title,
+}: FormLabelProps) {
   return (
     <label
       htmlFor={htmlFor}

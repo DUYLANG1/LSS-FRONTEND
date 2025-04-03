@@ -11,6 +11,7 @@ import {
   FormInput,
   FormSelect,
   FormTextArea,
+  FormFieldWrapper,
 } from "@/components/skills/FormReuse";
 import { Skeleton } from "@/components/common/Skeleton";
 import { Button } from "@/components/common/Button";
@@ -166,10 +167,13 @@ export default function CreateSkillPage({ initialData }: CreateSkillPageProps) {
             />
           )}
 
-          <div className="space-y-2">
-            <FormLabel htmlFor="category" className="text-lg font-medium">
-              Category <span className="text-red-500">*</span>
-            </FormLabel>
+          <FormFieldWrapper
+            htmlFor="category"
+            label="Category"
+            tooltip="Select the most relevant category for your skill"
+            required // Indicate this field is required
+            className="space-y-2"
+          >
             <FormSelect
               ref={categoryRef}
               id="category"
@@ -178,47 +182,42 @@ export default function CreateSkillPage({ initialData }: CreateSkillPageProps) {
               required
               className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
-            <p className="text-sm text-[var(--text-secondary)]">
-              Select the most relevant category for your skill
-            </p>
-          </div>
+          </FormFieldWrapper>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <FormLabel htmlFor="title" className="text-lg font-medium">
-                Skill Title <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormInput
-                ref={titleRef}
-                id="title"
-                name="title"
-                placeholder="e.g. JavaScript Programming, Guitar Lessons"
-                required
-                className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-              <p className="text-sm text-[var(--text-secondary)]">
-                Be specific about what skill you're offering (min. 3 characters)
-              </p>
-            </div>
+          <FormFieldWrapper
+            htmlFor="title"
+            label="Skill Title"
+            tooltip="Be specific about what skill you're offering (min. 2 characters)"
+            required // Indicate this field is required
+            className="space-y-2"
+          >
+            <FormInput
+              ref={titleRef}
+              id="title"
+              name="title"
+              placeholder="e.g. JavaScript Programming, Guitar Lessons"
+              required
+              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </FormFieldWrapper>
 
-            <div className="space-y-2">
-              <FormLabel htmlFor="description" className="text-lg font-medium">
-                Description <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormTextArea
-                ref={descriptionRef}
-                id="description"
-                name="description"
-                placeholder="Describe your skill in detail. Include your experience level, teaching approach, and any requirements."
-                required
-                className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[150px]"
-                rows={6}
-              />
-              <p className="text-sm text-[var(--text-secondary)]">
-                Detailed descriptions get more interest (min. 5 characters)
-              </p>
-            </div>
-          </div>
+          <FormFieldWrapper
+            htmlFor="description"
+            label="Description"
+            tooltip="Detailed descriptions get more interest (min. 5 characters)"
+            required // Indicate this field is required
+            className="space-y-2"
+          >
+            <FormTextArea
+              ref={descriptionRef}
+              id="description"
+              name="description"
+              placeholder="Describe your skill in detail. Include your experience level, teaching approach, and any requirements."
+              required
+              rows={6}
+              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[150px]"
+            />
+          </FormFieldWrapper>
 
           <div className="pt-6 border-t border-[var(--card-border)] flex justify-end">
             <Button
