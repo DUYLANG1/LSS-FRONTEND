@@ -110,7 +110,8 @@ export const skillsService = {
     return response.json();
   },
 
-  async update(id: string, data: CreateSkillData) {
+  // Update the method signature to accept partial data
+  async update(id: string, data: Partial<CreateSkillData>) {
     try {
       const response = await fetch(API_ENDPOINTS.skills.update(id), {
         method: "PUT",
