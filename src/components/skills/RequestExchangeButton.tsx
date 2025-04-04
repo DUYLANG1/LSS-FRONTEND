@@ -25,7 +25,9 @@ export function RequestExchangeButton({
   const handleRequestExchange = (e: React.MouseEvent) => {
     // Stop propagation to prevent parent link navigation
     e.stopPropagation();
-    
+    // Prevent default to avoid form submission or link navigation
+    e.preventDefault();
+
     if (!session) {
       router.push(`/auth/signin?callbackUrl=/skills`);
       return;

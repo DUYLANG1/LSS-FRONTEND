@@ -88,9 +88,10 @@ export function ExchangeModal({
         },
         credentials: "include", // This will include cookies in the request
         body: JSON.stringify({
-          fromUserSkillId: selectedSkillId,
-          toUserSkillId: requestedSkillId,
+          offeredSkillId: selectedSkillId,
+          requestedSkillId: requestedSkillId,
           toUserId: skillOwnerId,
+          fromUserId: session.user.id,
         }),
       });
 
@@ -180,10 +181,6 @@ export function ExchangeModal({
               <p className="text-blue-800 dark:text-blue-300">
                 You're requesting{" "}
                 <span className="font-semibold">"{requestedSkillTitle}"</span>
-                owned by{" "}
-                <span className="font-semibold">
-                  {skillOwnerId === session?.user?.id}
-                </span>
               </p>
             </div>
 
@@ -220,9 +217,15 @@ export function ExchangeModal({
               {userSkills.length === 0 && !loading && (
                 <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
                   You need to create a skill before you can request an exchange.{" "}
-                  <a href="/skills/create" className="underline font-medium">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = "/skills/create";
+                    }}
+                    className="underline font-medium text-orange-600 dark:text-orange-400"
+                  >
                     Create a skill
-                  </a>
+                  </button>
                 </p>
               )}
             </div>
