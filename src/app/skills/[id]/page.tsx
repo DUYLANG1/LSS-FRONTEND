@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -8,8 +7,8 @@ import { use } from "react";
 import { Skeleton } from "@/components/common/Skeleton";
 import { BackButton } from "@/components/common/BackButton";
 import { UserAvatar } from "@/components/user/UserAvatar";
-import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
 import { useSkill } from "@/hooks/useSkill";
+import { RequestExchangeButton } from "@/components/skills/RequestExchangeButton";
 
 export default function SkillDetailPage({
   params,
@@ -17,7 +16,6 @@ export default function SkillDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
-  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const { skill, loading, error } = useSkill(resolvedParams.id);
   const { data: session } = useSession();
   const isOwner = session?.user?.id === skill?.userId;
@@ -69,12 +67,12 @@ export default function SkillDetailPage({
                 </Link>
               </div>
             ) : (
-              <button
+              <RequestExchangeButton
+                skillId={skill.id}
+                skillTitle={skill.title}
+                skillOwnerId={skill.userId}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                onClick={() => setExchangeModalOpen(true)}
-              >
-                Request Skill Exchange
-              </button>
+              />
             )}
           </div>
         </div>

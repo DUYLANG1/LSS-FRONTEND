@@ -14,9 +14,9 @@ export const API_ENDPOINTS = {
   },
   categories: `${API_BASE_BACKEND}/categories`,
   users: {
-    profile: `${API_BASE_BACKEND}/users/profile`,
-    update: `${API_BASE_BACKEND}/users/profile`,
-    skills: `${API_BASE_BACKEND}/users/skills`,
+    profile: (id: string) => `${API_BASE_BACKEND}/users/profile/${id}`,
+    update: (id: string) => `${API_BASE_BACKEND}/users/profile/${id}`,
+    skills: (id: string) => `${API_BASE_BACKEND}/users/skills/${id}`,
   },
   exchanges: {
     list: `${API_BASE_BACKEND}/exchanges`,

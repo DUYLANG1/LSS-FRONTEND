@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { RequestExchangeButton } from "./RequestExchangeButton";
 
 export default function SkillCard({ skill }: { skill: Skill }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -63,25 +64,34 @@ export default function SkillCard({ skill }: { skill: Skill }) {
             </div>
           </div>
 
-          <button
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-              isHovered ? "scale-105" : "scale-100"
-            } ${
-              isOwner
-                ? "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                : "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500"
-            }`}
-            onClick={(e) => {
-              e.preventDefault();
-              if (isOwner) {
+          {isOwner ? (
+            <button
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                isHovered ? "scale-105" : "scale-100"
+              } bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600`}
+              onClick={(e) => {
+                e.preventDefault();
                 handleEdit(e);
-              } else {
-                // Handle request exchange
-              }
-            }}
-          >
-            {isOwner ? "Edit" : "Request Exchange"}
-          </button>
+              }}
+            >
+              Edit
+            </button>
+          ) : (
+            <div onClick={(e) => e.preventDefault()}>
+              <RequestExchangeButton
+                skillId={skill.id}
+                skillTitle={skill.title}
+                skillOwnerId={skill.userId}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all 
+                  ${isHovered ? "scale-110" : "scale-100"} 
+                  bg-gradient-to-r from-blue-500 to-blue-600 text-white 
+                  hover:from-blue-600 hover:to-blue-700
+                  dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-600
+                  shadow-sm hover:shadow-md border border-blue-400 dark:border-blue-800
+                  animate-pulse-subtle`}
+              />
+            </div>
+          )}
         </div>
       </div>
     </Link>
