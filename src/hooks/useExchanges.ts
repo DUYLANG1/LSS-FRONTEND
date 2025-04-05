@@ -64,7 +64,7 @@ export function useExchanges() {
 
   // Update filters and trigger a refetch
   const updateFilters = (newFilters: ExchangeFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   // Clear all filters
@@ -85,11 +85,11 @@ export function useExchanges() {
       const queryParams = new URLSearchParams();
 
       if (filters.status) {
-        queryParams.append('status', filters.status);
+        queryParams.append("status", filters.status);
       }
 
       if (filters.skillId) {
-        queryParams.append('skillId', filters.skillId);
+        queryParams.append("skillId", filters.skillId);
       }
 
       // Append query parameters if any exist
@@ -168,6 +168,12 @@ export function useExchanges() {
         API_ENDPOINTS.exchanges.status(skillId, userId),
         {
           credentials: "include",
+          // Add cache: 'no-store' to ensure we always get the latest data
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
         }
       );
 
@@ -176,6 +182,22 @@ export function useExchanges() {
       }
 
       const data = await response.json();
+
+      // Expected response format:
+      // {
+      //   exchange: {
+      //     id: string,
+      //     status: "pending" | "accepted" | "rejected",
+      //     fromUserId: string,
+      //     toUserId: string,
+      //     fromUserSkill: { id: string, title: string },
+      //     toUserSkill: { id: string, title: string },
+      //     offeredSkillId: string,
+      //     requestedSkillId: string,
+      //     createdAt: string
+      //   }
+      // }
+
       return data;
     } catch (err) {
       console.error("Error checking exchange status:", err);
@@ -192,21 +214,18 @@ export function useExchanges() {
     if (!session) return false;
 
     try {
-      const response = await fetch(
-        API_ENDPOINTS.exchanges.create,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            toUserId,
-            offeredSkillId,
-            requestedSkillId
-          }),
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.exchanges.create, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          toUserId,
+          offeredSkillId,
+          requestedSkillId,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to create exchange request");

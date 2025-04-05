@@ -39,8 +39,25 @@ export function RequestExchangeButton({
   useEffect(() => {
     if (session?.user?.id) {
       fetchExchangeStatus();
+
+      // Set up polling for status updates if there's a pending exchange
+      let statusCheckInterval: NodeJS.Timeout | null = null;
+
+      if (exchangeStatus === "pending") {
+        // Poll every 10 seconds for status updates
+        statusCheckInterval = setInterval(() => {
+          fetchExchangeStatus();
+        }, 10000);
+      }
+
+      // Clean up interval on unmount or when status changes
+      return () => {
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+        }
+      };
     }
-  }, [session, skillId]);
+  }, [session, skillId, exchangeStatus]);
 
   // Fetch exchange status directly from API
   async function fetchExchangeStatus() {
@@ -55,9 +72,14 @@ export function RequestExchangeButton({
       );
 
       if (result && result.exchange) {
+        // Update with the latest status from the ExchangeRequest table
         setExchangeStatus(result.exchange.status);
         setExchangeId(result.exchange.id);
         setExchangeDetails(result.exchange);
+
+        console.log(
+          `Exchange status for skill ${skillId}: ${result.exchange.status}`
+        );
       } else {
         // Reset states if no exchange found
         setExchangeStatus(null);
@@ -66,6 +88,10 @@ export function RequestExchangeButton({
       }
     } catch (error) {
       console.error("Error fetching exchange status:", error);
+      // Reset states on error
+      setExchangeStatus(null);
+      setExchangeId(null);
+      setExchangeDetails(null);
     } finally {
       setLoading(false);
     }
