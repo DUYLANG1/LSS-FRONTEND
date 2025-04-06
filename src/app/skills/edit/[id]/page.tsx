@@ -10,7 +10,7 @@ import {
 } from "@/services/skillsService";
 import { Skeleton } from "@/components/common/Skeleton";
 import { BackButton } from "@/components/common/BackButton";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 import { useCategories } from "@/hooks/useCategories";
 import {
@@ -264,7 +264,7 @@ export default function EditSkillPage({
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="default">
               Save Changes
             </Button>
           </div>

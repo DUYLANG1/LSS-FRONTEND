@@ -1,4 +1,12 @@
+import { api } from "@/lib/api";
 import { API_ENDPOINTS } from "@/config/api";
+
+export enum SkillLevel {
+  BEGINNER = "BEGINNER",
+  INTERMEDIATE = "INTERMEDIATE",
+  ADVANCED = "ADVANCED",
+  EXPERT = "EXPERT",
+}
 
 export interface Skill {
   id: string;
@@ -7,12 +15,14 @@ export interface Skill {
   categoryId: string;
   userId: string;
   createdAt: string;
-  level?: string; // Added optional level property
+  level?: SkillLevel;
   user: {
     id: string;
     name: string;
+    avatarUrl?: string;
   };
   category: {
+    id: string;
     name: string;
   };
 }
@@ -21,115 +31,81 @@ export interface CreateSkillData {
   title: string;
   description: string;
   categoryId: string;
-  userId: string;
+  level?: SkillLevel;
+}
+
+export interface UpdateSkillData {
+  title?: string;
+  description?: string;
+  categoryId?: string;
+  level?: SkillLevel;
 }
 
 export interface SkillsResponse {
   skills: Skill[];
   totalCount: number;
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface SkillsQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  userId?: string;
 }
 
 export const skillsService = {
-  // Merged getAll method that handles all parameter types
-  async getAll(
-    params?:
-      | Record<string, any>
-      | { page?: number; limit?: number; search?: string; category?: string }
-  ): Promise<SkillsResponse> {
-    try {
-      const searchParams = new URLSearchParams();
-      if (params) {
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            searchParams.append(key, value.toString());
-          }
-        });
-      }
-
-      const response = await fetch(
-        `${API_ENDPOINTS.skills.list}?${searchParams.toString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch skills");
-      }
-
-      const data = await response.json();
-      // Handle empty response gracefully
-      return {
-        skills: data.skills || [],
-        totalCount: data.meta?.total || 0,
-      };
-    } catch (error) {
-      console.error("Error fetching skills:", error);
-      throw new Error("Failed to fetch skills. Please try again later.");
-    }
+  /**
+   * Get all skills with optional filtering
+   */
+  async getAll(params?: SkillsQueryParams): Promise<SkillsResponse> {
+    return api.get<SkillsResponse>(API_ENDPOINTS.skills.list, { params });
   },
 
-  async create(data: CreateSkillData) {
-    try {
-      const response = await fetch(API_ENDPOINTS.skills.create, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies if using session auth
-        body: JSON.stringify({
-          title: data.title,
-          description: data.description,
-          category: data.categoryId, // Make sure field name matches API expectation
-          userId: data.userId,
-        }),
-      });
-
-      if (!response.ok) {
-        if (
-          response.headers.get("content-type")?.includes("application/json")
-        ) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to create skill");
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Skill creation error:", error);
-      throw error;
-    }
+  /**
+   * Create a new skill
+   */
+  async create(data: CreateSkillData): Promise<Skill> {
+    return api.post<Skill>(API_ENDPOINTS.skills.create, {
+      title: data.title,
+      description: data.description,
+      category: data.categoryId, // API expects 'category' not 'categoryId'
+      level: data.level,
+    });
   },
 
-  async getById(id: string) {
-    const response = await fetch(API_ENDPOINTS.skills.getById(id));
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch skill");
-    }
-
-    return response.json();
+  /**
+   * Get a skill by ID
+   */
+  async getById(id: string): Promise<Skill> {
+    return api.get<Skill>(API_ENDPOINTS.skills.getById(id));
   },
 
-  // Update the method signature to accept partial data
-  async update(id: string, data: Partial<CreateSkillData>) {
-    try {
-      const response = await fetch(API_ENDPOINTS.skills.update(id), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-  
-      if (!response.ok) {
-        throw new Error("Failed to update skill");
-      }
-  
-      return response.json();
-    } catch (error) {
-      console.error("Error updating skill:", error);
-      throw error;
-    }
+  /**
+   * Update a skill
+   */
+  async update(id: string, data: UpdateSkillData): Promise<Skill> {
+    // Transform data if needed for API compatibility
+    const apiData = {
+      ...data,
+      category: data.categoryId, // API expects 'category' not 'categoryId'
+    };
+
+    delete apiData.categoryId;
+
+    return api.put<Skill>(API_ENDPOINTS.skills.update(id), apiData);
+  },
+
+  /**
+   * Delete a skill
+   */
+  async delete(id: string): Promise<void> {
+    return api.delete(API_ENDPOINTS.skills.delete(id));
   }
 };

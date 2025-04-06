@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
 import { useExchanges, Exchange } from "@/hooks/useExchanges";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/button";
 
 interface RequestExchangeButtonProps {
   skillId: string;
@@ -139,7 +139,7 @@ export function RequestExchangeButton({
       case "rejected":
         return "danger";
       default:
-        return "primary";
+        return "default";
     }
   };
 

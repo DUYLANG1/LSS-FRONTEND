@@ -14,7 +14,7 @@ import {
   FormFieldWrapper,
 } from "@/components/skills/FormReuse";
 import { Skeleton } from "@/components/common/Skeleton";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
 // Interface remains the same for data structure
@@ -189,7 +189,7 @@ export default function CreateSkillPage() {
             {/* Update button text to always be for creating */}
             <Button
               type="submit"
-              variant="primary"
+              variant="default"
               className="w-full sm:w-auto px-6 py-3 text-lg font-medium transition-all hover:shadow-md"
               // Add a loading state if needed
             >

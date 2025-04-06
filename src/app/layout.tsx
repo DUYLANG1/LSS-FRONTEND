@@ -1,7 +1,7 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
-import AuthProviders from "@/components/providers/AuthProviders";
+import Providers from "@/components/providers/Providers";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const geist = Geist({
@@ -25,14 +25,14 @@ export default function RootLayout({
         className={`${geist.className} antialiased`}
       >
         <ErrorBoundary>
-          <AuthProviders>
+          <Providers>
             <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
               <Navbar />
               <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {children}
               </main>
             </div>
-          </AuthProviders>
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>
