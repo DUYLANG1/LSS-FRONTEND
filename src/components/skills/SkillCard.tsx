@@ -2,16 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import { Skill, SkillLevel } from "@/services/skillsService";
+import { Skill } from "@/services/skillsService";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { badgeVariants } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/Card";
+import { badgeVariants } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { formatDate, truncateText } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";

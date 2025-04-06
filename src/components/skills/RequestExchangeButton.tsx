@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ExchangeModal } from "@/components/exchanges/ExchangeModal";
 import { useExchanges, Exchange } from "@/hooks/useExchanges";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface RequestExchangeButtonProps {
   skillId: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ExchangeFilters } from "@/hooks/useExchanges";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/Button";
 
 interface ExchangeFilterProps {
   filters: ExchangeFilters;

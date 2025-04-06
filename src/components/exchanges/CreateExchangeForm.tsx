@@ -3,15 +3,17 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useExchanges } from "@/hooks/useExchanges";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/Button";
 import { API_ENDPOINTS } from "@/config/api";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
 export function CreateExchangeForm() {
   const { createExchangeRequest } = useExchanges();
   const { data: session } = useSession();
-  
-  const [userSkills, setUserSkills] = useState<Array<{ id: string; title: string }>>([]);
+
+  const [userSkills, setUserSkills] = useState<
+    Array<{ id: string; title: string }>
+  >([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string>("");
   const [toUserId, setToUserId] = useState<string>("");
   const [requestedSkillId, setRequestedSkillId] = useState<string>("");
@@ -59,7 +61,7 @@ export function CreateExchangeForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!selectedSkillId || !toUserId || !requestedSkillId) {
       setError("Please fill in all fields");
       return;
@@ -67,20 +69,20 @@ export function CreateExchangeForm() {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const success = await createExchangeRequest(
         toUserId,
         selectedSkillId,
         requestedSkillId
       );
-      
+
       if (success) {
         setSuccess(true);
         // Reset form
         setToUserId("");
         setRequestedSkillId("");
-        
+
         // Reset success message after 3 seconds
         setTimeout(() => {
           setSuccess(false);
@@ -134,7 +136,10 @@ export function CreateExchangeForm() {
         </div>
 
         <div>
-          <label htmlFor="requestedSkillId" className="block text-sm font-medium mb-1">
+          <label
+            htmlFor="requestedSkillId"
+            className="block text-sm font-medium mb-1"
+          >
             Skill ID You're Requesting
           </label>
           <input
@@ -149,7 +154,10 @@ export function CreateExchangeForm() {
         </div>
 
         <div>
-          <label htmlFor="offeredSkillId" className="block text-sm font-medium mb-1">
+          <label
+            htmlFor="offeredSkillId"
+            className="block text-sm font-medium mb-1"
+          >
             Your Skill to Offer
           </label>
           {loading && userSkills.length === 0 ? (
@@ -174,7 +182,7 @@ export function CreateExchangeForm() {
               )}
             </select>
           )}
-          
+
           {userSkills.length === 0 && !loading && (
             <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
               You need to create a skill before you can request an exchange.{" "}
@@ -190,7 +198,7 @@ export function CreateExchangeForm() {
 
         <Button
           type="submit"
-          variant="primary"
+          variant="default"
           className="w-full"
           disabled={loading || userSkills.length === 0}
           isLoading={loading}

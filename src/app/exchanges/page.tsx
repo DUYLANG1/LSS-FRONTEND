@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/common/Loading";
-import { Button } from "@/components/common/Button";
-import { useExchanges, ExchangeFilters } from "@/hooks/useExchanges";
+import { Button } from "@/components/ui/Button";
+import { useExchanges } from "@/hooks/useExchanges";
 import { CreateExchangeForm } from "@/components/exchanges/CreateExchangeForm";
 import { ExchangeCard } from "@/components/exchanges/ExchangeCard";
 import { ExchangeFilter } from "@/components/exchanges/ExchangeFilter";
@@ -19,10 +19,12 @@ export default function ExchangesPage() {
     refreshExchanges,
     filters,
     updateFilters,
-    clearFilters
+    clearFilters,
   } = useExchanges();
 
-  const [activeTab, setActiveTab] = useState<"all" | "pending" | "active">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "pending" | "active">(
+    "all"
+  );
 
   // Set up periodic refresh of exchanges
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function ExchangesPage() {
   if (!session) return <div>Please sign in to view your exchanges</div>;
 
   // Filter exchanges based on active tab
-  const filteredExchanges = exchanges.filter(exchange => {
+  const filteredExchanges = exchanges.filter((exchange) => {
     if (activeTab === "pending") return exchange.status === "pending";
     if (activeTab === "active") return exchange.status === "accepted";
     return true; // "all" tab

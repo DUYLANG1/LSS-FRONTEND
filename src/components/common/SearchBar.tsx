@@ -2,10 +2,10 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardBody } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import { useCategories } from "@/hooks/useCategories";
 import { debounce } from "@/lib/utils";
 

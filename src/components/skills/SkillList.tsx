@@ -3,7 +3,7 @@
 import React from "react";
 import { useSkills } from "@/hooks/useSkills";
 import SkillCard from "./SkillCard";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export interface SkillListProps {
@@ -21,11 +21,13 @@ export function SkillList({
   userId,
   limit = 12,
   showPagination = true,
-  showActions = true
+  showActions = true,
 }: SkillListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialPage = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
+  const initialPage = searchParams.get("page")
+    ? parseInt(searchParams.get("page")!)
+    : 1;
 
   const {
     skills,
@@ -34,15 +36,15 @@ export function SkillList({
     meta,
     totalCount,
     updateParams,
-    fetchSkills
+    fetchSkills,
   } = useSkills({
     initialParams: {
       page: initialPage,
       limit,
       search: searchQuery,
       category: category || undefined,
-      userId
-    }
+      userId,
+    },
   });
 
   // Handle page change
@@ -124,7 +126,9 @@ export function SkillList({
           <nav className="flex items-center space-x-2">
             <button
               className="h-8 px-3 text-xs border border-[var(--card-border)] bg-transparent hover:bg-[var(--card-background)] rounded-md disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => handlePageChange(meta?.page ? meta.page - 1 : initialPage - 1)}
+              onClick={() =>
+                handlePageChange(meta?.page ? meta.page - 1 : initialPage - 1)
+              }
               disabled={meta?.page === 1 || initialPage === 1}
             >
               Previous
@@ -165,7 +169,9 @@ export function SkillList({
 
             <button
               className="h-8 px-3 text-xs border border-[var(--card-border)] bg-transparent hover:bg-[var(--card-background)] rounded-md disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => handlePageChange(meta?.page ? meta.page + 1 : initialPage + 1)}
+              onClick={() =>
+                handlePageChange(meta?.page ? meta.page + 1 : initialPage + 1)
+              }
               disabled={meta?.page === totalPages || initialPage === totalPages}
             >
               Next

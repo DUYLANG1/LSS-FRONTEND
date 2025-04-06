@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { API_ENDPOINTS } from "@/config/api";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
 interface ExchangeModalProps {
@@ -235,14 +235,13 @@ export function ExchangeModal({
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 onClick={handleSubmit}
                 disabled={
                   loading || !selectedSkillId || userSkills.length === 0
                 }
-                isLoading={loading}
               >
-                Send Request
+                {loading ? "Sending..." : "Send Request"}
               </Button>
             </div>
           </>

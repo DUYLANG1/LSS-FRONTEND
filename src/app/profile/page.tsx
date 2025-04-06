@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { ProtectedRoute } from "@/components/providers/ProtectedRoute";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/ui/Card";
 
 export default function ProfilePage() {
   const { data: session } = useSession();

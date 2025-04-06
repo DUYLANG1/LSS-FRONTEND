@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useRef, FormEvent, use } from "react";
+import { useEffect, useState, FormEvent, use } from "react";
 import {
   Skill,
   skillsService,
@@ -10,11 +10,10 @@ import {
 } from "@/services/skillsService";
 import { Skeleton } from "@/components/common/Skeleton";
 import { BackButton } from "@/components/common/BackButton";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 import { useCategories } from "@/hooks/useCategories";
 import {
-  FormLabel,
   FormInput,
   FormSelect,
   FormTextArea,
@@ -31,35 +30,49 @@ export default function EditSkillPage({
   const { data: session, status } = useSession();
   const { categories, isLoading: categoriesLoading } = useCategories();
 
+  // Form state
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    categoryId: "",
+  });
+
+  // Page state
   const [skillData, setSkillData] = useState<Skill | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const titleRef = useRef<HTMLInputElement>(null);
-  const categoryRef = useRef<HTMLSelectElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resolvedParams = use(params);
   const skillId = resolvedParams.id;
 
+  // Handle form field changes
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Load data from query parameters or skill data
   useEffect(() => {
+    // Check for query parameters
     const titleFromQuery = searchParams.get("title");
     const descriptionFromQuery = searchParams.get("description");
     const categoryIdFromQuery = searchParams.get("categoryId");
 
-    if (titleFromQuery && titleRef.current) {
-      titleRef.current.value = titleFromQuery;
-    }
+    // Update form with query parameters if they exist
+    setFormData((prev) => ({
+      ...prev,
+      title: titleFromQuery || prev.title,
+      description: descriptionFromQuery || prev.description,
+      categoryId: categoryIdFromQuery || prev.categoryId,
+    }));
+  }, [searchParams]);
 
-    if (descriptionFromQuery && descriptionRef.current) {
-      descriptionRef.current.value = descriptionFromQuery;
-    }
-
-    if (categoryIdFromQuery && categoryRef.current && !categoriesLoading) {
-      categoryRef.current.value = categoryIdFromQuery;
-    }
-  }, [searchParams, categoriesLoading]);
-
+  // Load skill data
   useEffect(() => {
     async function loadSkill() {
       if (!skillId) {
@@ -67,86 +80,70 @@ export default function EditSkillPage({
         setLoading(false);
         return;
       }
+
       try {
         setLoading(true);
         setError(null);
         const skill = await skillsService.getById(skillId);
 
+        // Check authorization
         if (skill.userId !== session?.user?.id) {
           setError("You are not authorized to edit this skill.");
           router.push("/skills");
           return;
         }
 
+        // Set skill data
         setSkillData(skill);
-        const titleFromQuery = searchParams.get("title");
-        const descriptionFromQuery = searchParams.get("description");
-        const categoryIdFromQuery = searchParams.get("categoryId");
 
-        if (!titleFromQuery && titleRef.current) {
-          titleRef.current.value = skill.title;
-        }
-
-        if (!descriptionFromQuery && descriptionRef.current) {
-          descriptionRef.current.value = skill.description;
-        }
-
-        if (!categoryIdFromQuery && categoryRef.current && !categoriesLoading) {
-          categoryRef.current.value = skill.categoryId;
-        }
-      } catch (fetchError) {
-        console.error("Failed to load skill:", fetchError);
+        // Update form data if no query parameters exist
+        setFormData((prev) => ({
+          title: prev.title || skill.title,
+          description: prev.description || skill.description,
+          categoryId: prev.categoryId || skill.categoryId,
+        }));
+      } catch (error) {
+        console.error("Failed to load skill:", error);
         setError(
           "Failed to load skill details. It might not exist or an error occurred."
         );
       } finally {
-        // Remove the conditional check that's causing the infinite loading
         setLoading(false);
       }
     }
 
+    // Load skill if authenticated
     if (status === "authenticated" && skillId) {
       loadSkill();
     } else if (status === "unauthenticated") {
       router.push(`/auth/signin?callbackUrl=/skills/edit/${skillId}`);
     }
-  }, [
-    skillId,
-    session?.user?.id,
-    status,
-    router,
-    categoriesLoading,
-    searchParams,
-  ]);
+  }, [skillId, session?.user?.id, status, router]);
 
-  useEffect(() => {
-    if (skillData && categoryRef.current && !categoriesLoading) {
-      categoryRef.current.value = skillData.categoryId;
-    }
-  }, [skillData, categoriesLoading]);
-
+  // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    const title = titleRef.current?.value?.trim() || "";
-    const categoryId = categoryRef.current?.value || "";
-    const description = descriptionRef.current?.value?.trim() || "";
-
+    // Validate required data
     if (!skillData?.id) {
       setError("Skill ID is missing, cannot update.");
+      setIsSubmitting(false);
       return;
     }
+
     if (!session?.user?.id) {
       setError("Authentication error. Please log in again.");
+      setIsSubmitting(false);
       return;
     }
 
     try {
       const updateData: Partial<CreateSkillData> = {
-        title: title,
-        description: description,
-        categoryId: categoryId,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        categoryId: formData.categoryId,
       };
 
       const response = await skillsService.update(skillData.id, updateData);
@@ -163,10 +160,14 @@ export default function EditSkillPage({
           ? err.message
           : "An unexpected error occurred while updating the skill"
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (status === "loading" || loading || categoriesLoading) {
+  // Show loading state
+  const isLoading = status === "loading" || loading || categoriesLoading;
+  if (isLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton href="/skills" text="Back to Skills" className="mb-6" />
@@ -206,12 +207,13 @@ export default function EditSkillPage({
             className="space-y-2"
           >
             <FormSelect
-              ref={categoryRef}
-              id="category"
-              name="category"
+              id="categoryId"
+              name="categoryId"
               options={categories}
               required
               className="w-full"
+              defaultValue={formData.categoryId}
+              onChange={handleChange}
             >
               <option value="">Select a category</option>
             </FormSelect>
@@ -225,14 +227,14 @@ export default function EditSkillPage({
             className="space-y-2"
           >
             <FormInput
-              ref={titleRef}
               id="title"
               name="title"
               placeholder="e.g., JavaScript Programming, Guitar Lessons"
               required
               minLength={2}
               className="w-full"
-              defaultValue={skillData?.title || ""} // Change value to defaultValue
+              defaultValue={formData.title}
+              onChange={handleChange}
             />
           </FormFieldWrapper>
 
@@ -244,7 +246,6 @@ export default function EditSkillPage({
             className="space-y-2"
           >
             <FormTextArea
-              ref={descriptionRef}
               id="description"
               name="description"
               placeholder="Provide details about your skill, experience level, and what you can teach..."
@@ -252,7 +253,8 @@ export default function EditSkillPage({
               rows={5}
               minLength={5}
               className="w-full"
-              defaultValue={skillData?.description || ""} // Change value to defaultValue
+              defaultValue={formData.description}
+              onChange={handleChange}
             />
           </FormFieldWrapper>
 
@@ -261,11 +263,12 @@ export default function EditSkillPage({
               type="button"
               variant="outline"
               onClick={() => router.push(`/skills/${skillId}`)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" variant="default">
-              Save Changes
+            <Button type="submit" variant="default" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>

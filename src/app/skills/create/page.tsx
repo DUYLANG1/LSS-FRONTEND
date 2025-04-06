@@ -14,7 +14,7 @@ import {
   FormFieldWrapper,
 } from "@/components/skills/FormReuse";
 import { Skeleton } from "@/components/common/Skeleton";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
 // Interface remains the same for data structure

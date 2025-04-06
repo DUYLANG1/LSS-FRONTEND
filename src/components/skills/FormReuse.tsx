@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef } from "react";
+import React, { ReactNode, forwardRef } from "react";
 
 export interface BaseFormProps {
   id: string;
@@ -19,19 +19,22 @@ interface FormInputProps extends BaseFormProps {
   placeholder?: string;
   minLength?: number;
   defaultValue?: string;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
 
 interface FormSelectProps extends BaseFormProps {
   options: Array<{ id: string; name: string }>;
   children?: ReactNode;
   defaultValue?: string;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
 }
 
 interface FormTextAreaProps extends BaseFormProps {
   placeholder?: string;
   rows?: number;
   minLength?: number;
-  defaultValue?: string; // Add defaultValue property
+  defaultValue?: string;
+  onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
 }
 
 export interface FormFieldWrapperProps {

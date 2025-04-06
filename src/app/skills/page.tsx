@@ -3,8 +3,8 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { SearchBar } from "@/components/common/SearchBar";
 import { SkillList } from "@/components/skills/SkillList";
 import { useCategories } from "@/hooks/useCategories";
