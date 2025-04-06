@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/components/providers/ThemeContext";
 import { useSession, signOut } from "next-auth/react";
 import { UserRole } from "@/utils/permissions";
 import { Button } from "@/components/ui/Button";

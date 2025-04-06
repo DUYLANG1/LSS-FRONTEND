@@ -76,10 +76,6 @@ export function RequestExchangeButton({
         setExchangeStatus(result.exchange.status);
         setExchangeId(result.exchange.id);
         setExchangeDetails(result.exchange);
-
-        console.log(
-          `Exchange status for skill ${skillId}: ${result.exchange.status}`
-        );
       } else {
         // Reset states if no exchange found
         setExchangeStatus(null);

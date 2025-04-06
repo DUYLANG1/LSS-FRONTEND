@@ -1,10 +1,10 @@
 export enum UserRole {
-  MEMBER = "MEMBER",
+  USER = "USER",
   ADMIN = "ADMIN",
 }
 
 export const Permissions = {
-  [UserRole.MEMBER]: {
+  [UserRole.USER]: {
     viewContent: true,
     createPosts: true,
     editOwnPosts: true,

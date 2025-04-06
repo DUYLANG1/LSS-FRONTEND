@@ -3,6 +3,34 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "@/lib/auth";
 import { UserRole } from "@/utils/permissions";
 
+// Extend the User type to include our custom properties
+declare module "next-auth" {
+  interface User {
+    id: string;
+    email?: string | null;
+    name?: string;
+    role: UserRole;
+    accessToken?: string;
+  }
+
+  interface Session {
+    user: {
+      id: string;
+      email?: string | null;
+      name?: string;
+      role: UserRole;
+    };
+    accessToken?: string;
+  }
+
+  interface JWT {
+    id: string;
+    email?: string | null;
+    role: UserRole;
+    accessToken?: string;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -16,7 +44,6 @@ export const authOptions: NextAuthOptions = {
           if (!credentials?.email || !credentials?.password) {
             throw new Error("Email and password required");
           }
-
           const user = await validateUser(
             credentials.email,
             credentials.password
@@ -32,9 +59,11 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
+            accessToken: user.accessToken,
           };
         } catch (error) {
-          console.error("Auth error:", error);
+          console.error("NextAuth authorize error:", error);
+          // Return null instead of re-throwing to prevent NextAuth from showing error page
           return null;
         }
       },
@@ -49,24 +78,24 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Initial sign in
-      if (account && user) {
-        return {
-          ...token,
-          id: user.id,
-          role: user.role,
-        };
+    async jwt({ token, user }) {
+      // Add user properties to the token right after signin
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.accessToken = user.accessToken;
       }
-      // Return previous token if the access token has not expired yet
       return token;
     },
     async session({ session, token }) {
       // Send properties to the client
       if (session.user) {
-        session.user.id = token.id;
+        session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
       }
+
+      // Add access token to the session
+      session.accessToken = token.accessToken as string | undefined;
       return session;
     },
   },
