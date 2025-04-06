@@ -46,12 +46,15 @@ export function SkillList({
     },
   });
 
+  // Determine if pagination is needed based on total count and limit
+  const shouldShowPagination = showPagination && totalCount > limit;
+
   // Handle page change
   const handlePageChange = (newPage: number) => {
     updateParams({ page: newPage });
 
     // Update URL with new page parameter
-    if (showPagination) {
+    if (shouldShowPagination) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", newPage.toString());
       router.push(`/skills?${params.toString()}`);
@@ -104,8 +107,9 @@ export function SkillList({
     );
   }
 
-  // Calculate total pages
-  const totalPages = meta?.totalPages || Math.ceil(totalCount / limit);
+  // Calculate total pages - ensure we don't show pagination if there's only one page worth of items
+  const totalPages =
+    meta?.totalPages || Math.max(1, Math.ceil(totalCount / limit));
 
   return (
     <div>
@@ -123,7 +127,7 @@ export function SkillList({
       )}
 
       {/* Pagination controls */}
-      {showPagination && totalPages > 1 && (
+      {shouldShowPagination && totalPages > 1 && (
         <div className="flex justify-center mt-8">
           <nav className="flex items-center space-x-2">
             <button

@@ -107,9 +107,6 @@ export default function SkillCard({
                 skill.user.name[0].toUpperCase()
               )}
             </div>
-            <span className="text-sm group-hover:text-[var(--primary)] transition-colors">
-              {skill.user.name}
-            </span>
           </Link>
 
           {showActions && (

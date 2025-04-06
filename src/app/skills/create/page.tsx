@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useRef, FormEvent, useEffect, useState } from "react"; // Added useState
-import { skillsService } from "@/services/skillsService"; // Removed Skill type as initialData is gone
+import { skillsService, SkillLevel } from "@/services/skillsService"; // Import SkillLevel enum
 import { useCategories } from "@/hooks/useCategories";
 import { BackButton } from "@/components/common/BackButton";
 import {
@@ -17,19 +17,15 @@ import { Skeleton } from "@/components/common/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
-// Interface remains the same for data structure
-interface CreateSkillData {
-  title: string;
-  description: string;
-  categoryId: string;
-  userId: string;
-}
+// Use the CreateSkillData interface from skillsService
+import type { CreateSkillData } from "@/services/skillsService";
 
 // Removed CreateSkillPageProps interface and initialData prop
 export default function CreateSkillPage() {
   // Create refs for form elements
   const titleRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLSelectElement>(null);
+  const levelRef = useRef<HTMLSelectElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null); // Use state for error display
 
@@ -53,6 +49,7 @@ export default function CreateSkillPage() {
     // Get values from refs (remains the same)
     const title = titleRef.current?.value?.trim() || "";
     const categoryId = categoryRef.current?.value || "";
+    const levelValue = levelRef.current?.value || "";
     const description = descriptionRef.current?.value?.trim() || "";
 
     if (!session?.user?.id) {
@@ -61,21 +58,49 @@ export default function CreateSkillPage() {
     }
 
     try {
-      // Skill data construction remains the same
+      // Validate inputs
+      if (!title) {
+        setError("Title is required");
+        return;
+      }
+
+      if (!categoryId) {
+        setError("Category is required");
+        return;
+      }
+
+      if (!description) {
+        setError("Description is required");
+        return;
+      }
+
+      // Skill data construction
       const skillData: CreateSkillData = {
-        title: title, // Use validated variables
-        description: description, // Use validated variables
-        categoryId: categoryId, // Use validated variables
-        userId: session.user.id,
+        title: title,
+        description: description,
+        categoryId: categoryId,
+        // Only include level if a value is selected
+        ...(levelValue ? { level: levelValue as SkillLevel } : {}),
+        // Note: userId is passed as a separate parameter, not in the skillData object
       };
 
-      // Only call create, removed the conditional update logic
-      const response = await skillsService.create(skillData);
+      console.log("Creating skill with data:", {
+        title: skillData.title,
+        description: skillData.description,
+        categoryId: skillData.categoryId,
+        level: skillData.level,
+      });
+
+      // Call create with skillData and userId separately
+      const response = await skillsService.create(skillData, session.user.id);
+
+      console.log("Skill creation response:", response);
 
       if (response.id) {
-        // Reset form (remains the same)
+        // Reset form
         if (titleRef.current) titleRef.current.value = "";
         if (categoryRef.current) categoryRef.current.value = "";
+        if (levelRef.current) levelRef.current.value = "";
         if (descriptionRef.current) descriptionRef.current.value = "";
 
         router.push(`/skills/${response.id}`);
@@ -85,11 +110,25 @@ export default function CreateSkillPage() {
       }
     } catch (err) {
       console.error("Error creating skill:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred while creating the skill"
-      );
+
+      // More detailed error handling
+      if (err instanceof Error) {
+        if (
+          err.message.includes("401") ||
+          err.message.includes("unauthorized")
+        ) {
+          setError("Authentication error. Please sign in again.");
+        } else if (err.message.includes("400")) {
+          setError("Invalid data. Please check your inputs and try again.");
+        } else {
+          // Show the full error message for debugging
+          setError(`Error: ${err.message}`);
+          console.error("Full error details:", err);
+        }
+      } else {
+        setError("An unexpected error occurred while creating the skill");
+        console.error("Non-Error object thrown:", err);
+      }
     }
   };
 
@@ -163,6 +202,33 @@ export default function CreateSkillPage() {
               minLength={2} // Add minLength for basic validation
               className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
+          </FormField>
+
+          {/* Add FormFieldWrapper for Skill Level */}
+          <FormField
+            id="level"
+            label="Skill Level"
+            tooltip="Select your proficiency level in this skill"
+            className="space-y-2"
+          >
+            <FormSelect
+              ref={levelRef}
+              id="level"
+              name="level"
+              options={Object.values(SkillLevel).map((level) => ({
+                id: level,
+                name: level.charAt(0) + level.slice(1).toLowerCase(),
+              }))}
+              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              defaultValue=""
+            >
+              <option value="">Select a level (optional)</option>
+              {Object.values(SkillLevel).map((level) => (
+                <option key={level} value={level}>
+                  {level.charAt(0) + level.slice(1).toLowerCase()}
+                </option>
+              ))}
+            </FormSelect>
           </FormField>
 
           {/* FormFieldWrapper for Description remains the same */}
