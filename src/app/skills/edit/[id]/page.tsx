@@ -17,8 +17,8 @@ import {
   FormInput,
   FormSelect,
   FormTextArea,
-  FormFieldWrapper,
-} from "@/components/skills/FormReuse";
+  FormField,
+} from "@/components/form/export";
 
 export default function EditSkillPage({
   params,
@@ -199,8 +199,8 @@ export default function EditSkillPage({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <FormFieldWrapper
-            htmlFor="category"
+          <FormField
+            id="categoryId"
             label="Category"
             tooltip="Select the most relevant category for your skill"
             required
@@ -217,10 +217,10 @@ export default function EditSkillPage({
             >
               <option value="">Select a category</option>
             </FormSelect>
-          </FormFieldWrapper>
+          </FormField>
 
-          <FormFieldWrapper
-            htmlFor="title"
+          <FormField
+            id="title"
             label="Title"
             tooltip="Give your skill a clear, descriptive title"
             required
@@ -236,10 +236,10 @@ export default function EditSkillPage({
               defaultValue={formData.title}
               onChange={handleChange}
             />
-          </FormFieldWrapper>
+          </FormField>
 
-          <FormFieldWrapper
-            htmlFor="description"
+          <FormField
+            id="description"
             label="Description"
             tooltip="Describe what you can teach, your experience level, and what learners can expect"
             required
@@ -256,7 +256,7 @@ export default function EditSkillPage({
               defaultValue={formData.description}
               onChange={handleChange}
             />
-          </FormFieldWrapper>
+          </FormField>
 
           <div className="flex justify-end space-x-4 pt-4">
             <Button

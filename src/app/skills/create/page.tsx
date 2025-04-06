@@ -11,8 +11,8 @@ import {
   FormInput,
   FormSelect,
   FormTextArea,
-  FormFieldWrapper,
-} from "@/components/skills/FormReuse";
+  FormField,
+} from "@/components/form/export";
 import { Skeleton } from "@/components/common/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
@@ -123,8 +123,8 @@ export default function CreateSkillPage() {
           {error && <ErrorDisplay error={error} className="animate-fade-in" />}
 
           {/* FormFieldWrapper for Category remains the same */}
-          <FormFieldWrapper
-            htmlFor="category"
+          <FormField
+            id="category"
             label="Category"
             tooltip="Select the most relevant category for your skill"
             required // Indicate this field is required
@@ -144,11 +144,11 @@ export default function CreateSkillPage() {
               </option>{" "}
               {/* Add placeholder option */}
             </FormSelect>
-          </FormFieldWrapper>
+          </FormField>
 
           {/* FormFieldWrapper for Title remains the same */}
-          <FormFieldWrapper
-            htmlFor="title"
+          <FormField
+            id="title"
             label="Skill Title"
             tooltip="Be specific about what skill you're offering (min. 2 characters)"
             required // Indicate this field is required
@@ -163,11 +163,11 @@ export default function CreateSkillPage() {
               minLength={2} // Add minLength for basic validation
               className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
-          </FormFieldWrapper>
+          </FormField>
 
           {/* FormFieldWrapper for Description remains the same */}
-          <FormFieldWrapper
-            htmlFor="description"
+          <FormField
+            id="description"
             label="Description"
             tooltip="Detailed descriptions get more interest (min. 5 characters)"
             required // Indicate this field is required
@@ -183,7 +183,7 @@ export default function CreateSkillPage() {
               minLength={5} // Add minLength for basic validation
               className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[150px]"
             />
-          </FormFieldWrapper>
+          </FormField>
 
           <div className="pt-6 border-t border-[var(--card-border)] flex justify-end">
             {/* Update button text to always be for creating */}
