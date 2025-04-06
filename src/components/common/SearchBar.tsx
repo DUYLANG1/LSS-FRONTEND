@@ -125,13 +125,29 @@ export function SearchBar({
     router.push(`/skills?${params.toString()}`);
   };
 
+  // Ensure categories is an array and has the expected structure
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
   // Prepare category options for the select component
-  const categoryOptions = [
+  const categoryOptions: Array<{ value: string; label: string }> = [
     { value: "", label: "All Categories" },
-    ...(categories?.map((category) => ({
-      value: category.id,
-      label: category.name,
-    })) || []),
+    ...(safeCategories
+      .map((category) => {
+        // Additional safety check for category structure
+        if (
+          category &&
+          typeof category === "object" &&
+          "id" in category &&
+          "name" in category
+        ) {
+          return {
+            value: category.id,
+            label: category.name,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as Array<{ value: string; label: string }>), // Remove any null entries and assert type
   ];
 
   return (

@@ -11,6 +11,7 @@ interface UseCategoriesResult {
 }
 
 export function useCategories(): UseCategoriesResult {
+  // Always initialize with empty arrays to prevent undefined
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,9 +22,17 @@ export function useCategories(): UseCategoriesResult {
     try {
       setIsLoading(true);
       const data = await categoriesService.getAll();
-      setCategories(data);
-      setFilteredCategories(data);
-      setError(null);
+
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setCategories(data);
+        setFilteredCategories(data);
+      } else {
+        console.error("Categories data is not an array:", data);
+        setCategories([]);
+        setFilteredCategories([]);
+        setError("Invalid categories data format");
+      }
     } catch (err) {
       console.error("Error loading categories:", err);
       setError("Failed to load categories");
@@ -44,8 +53,8 @@ export function useCategories(): UseCategoriesResult {
       setFilteredCategories(categories);
       return;
     }
-    
-    const filtered = categories.filter(category => 
+
+    const filtered = categories.filter((category) =>
       category.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredCategories(filtered);
@@ -55,8 +64,13 @@ export function useCategories(): UseCategoriesResult {
     setSearchQuery(query);
   }, []);
 
+  // Ensure we always return an array for categories
+  const safeFilteredCategories = Array.isArray(filteredCategories)
+    ? filteredCategories
+    : [];
+
   return {
-    categories: filteredCategories,
+    categories: safeFilteredCategories,
     isLoading,
     error,
     refetch: loadCategories,

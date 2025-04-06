@@ -4,20 +4,20 @@ import { API_ENDPOINTS } from "@/config/api";
 
 export interface Exchange {
   id: string;
-  fromUserId: string;
-  toUserId: string;
-  offeredSkillId: string; // Updated to match backend
-  requestedSkillId: string; // Updated to match backend
+  fromUserId?: string;
+  toUserId?: string;
+  offeredSkillId?: string; // Updated to match backend
+  requestedSkillId?: string; // Updated to match backend
   status: "pending" | "accepted" | "rejected";
-  createdAt: string;
-  isActive: boolean;
-  fromUser: {
+  createdAt?: string;
+  isActive?: boolean;
+  fromUser?: {
     id: string;
     name: string;
     email?: string;
     avatar?: string;
   };
-  toUser: {
+  toUser?: {
     id: string;
     name: string;
     email?: string;
@@ -99,7 +99,14 @@ export function useExchanges() {
       }
 
       const response = await fetch(url, {
-        credentials: "include", // Use cookies instead of accessToken
+        credentials: "include",
+        headers: {
+          ...(session.accessToken
+            ? {
+                Authorization: `Bearer ${session.accessToken}`,
+              }
+            : {}),
+        },
       });
 
       if (!response.ok) {
@@ -135,6 +142,11 @@ export function useExchanges() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(session.accessToken
+              ? {
+                  Authorization: `Bearer ${session.accessToken}`,
+                }
+              : {}),
           },
           credentials: "include",
           body: JSON.stringify({ status: accept ? "accepted" : "rejected" }),
@@ -171,37 +183,101 @@ export function useExchanges() {
           // Add cache: 'no-store' to ensure we always get the latest data
           cache: "no-store",
           headers: {
+            "Content-Type": "application/json",
             "Cache-Control": "no-cache",
             Pragma: "no-cache",
+            ...(session.accessToken
+              ? {
+                  Authorization: `Bearer ${session.accessToken}`,
+                }
+              : {}),
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to check exchange status");
+        let errorMessage = `Status: ${response.status}`;
+        let errorData = null;
+
+        try {
+          // Try to parse the error response as JSON
+          const errorText = await response.text();
+          console.error(
+            `Exchange status API error: ${response.status} - ${errorText}`
+          );
+
+          try {
+            // Attempt to parse as JSON if it looks like JSON
+            if (errorText.trim().startsWith("{")) {
+              errorData = JSON.parse(errorText);
+              errorMessage = errorData.message || errorMessage;
+            }
+          } catch (parseError) {
+            // If JSON parsing fails, use the raw text
+            console.warn("Failed to parse error response as JSON:", parseError);
+          }
+        } catch (textError) {
+          console.warn("Failed to read error response text:", textError);
+        }
+
+        // If it's a 404, it means there's no exchange yet, which is not an error
+        if (response.status === 404) {
+          console.log(
+            "No exchange found for this skill and user (404 response)"
+          );
+          return {
+            exchange: null,
+            message: "No exchange exists for this skill and user",
+          };
+        }
+
+        throw new Error(`Failed to check exchange status: ${errorMessage}`);
       }
 
       const data = await response.json();
 
-      // Expected response format:
-      // {
-      //   exchange: {
-      //     id: string,
-      //     status: "pending" | "accepted" | "rejected",
-      //     fromUserId: string,
-      //     toUserId: string,
-      //     fromUserSkill: { id: string, title: string },
-      //     toUserSkill: { id: string, title: string },
-      //     offeredSkillId: string,
-      //     requestedSkillId: string,
-      //     createdAt: string
-      //   }
-      // }
+      // Handle different response formats
+      // Format 1: { exchange: { ... } }
+      // Format 2: { data: { ... } }
+      // Format 3: { exists: boolean, status: string }
 
-      return data;
+      if (data.exchange) {
+        // Already in the expected format
+        return data;
+      } else if (data.data) {
+        // Transform from { data: { ... } } to { exchange: { ... } }
+        return {
+          exchange: data.data,
+        };
+      } else if (data.exists !== undefined) {
+        // Transform from { exists: boolean, status: string } to { exchange: { ... } }
+        if (data.exists && data.status) {
+          return {
+            exchange: {
+              id: data.id || "unknown",
+              status: data.status.toLowerCase(),
+              fromUserId: userId,
+              toUserId: "unknown",
+              // Add minimal required fields
+              fromUserSkill: { id: "unknown", title: "Your skill" },
+              toUserSkill: { id: skillId, title: "Requested skill" },
+            },
+          };
+        } else {
+          return { exchange: null };
+        }
+      } else {
+        // Unknown format, return as is and let the component handle it
+        console.warn("Unexpected exchange status response format:", data);
+        return data;
+      }
     } catch (err) {
       console.error("Error checking exchange status:", err);
-      return null;
+      // Return a structured null response instead of just null
+      return {
+        exchange: null,
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
   };
 
@@ -218,6 +294,11 @@ export function useExchanges() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(session.accessToken
+            ? {
+                Authorization: `Bearer ${session.accessToken}`,
+              }
+            : {}),
         },
         credentials: "include",
         body: JSON.stringify({

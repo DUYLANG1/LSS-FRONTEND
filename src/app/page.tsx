@@ -37,7 +37,7 @@ export default function Home() {
       </section>
 
       {/* Featured categories */}
-      {categories && categories.length > 0 && (
+      {Array.isArray(categories) && categories.length > 0 && (
         <section>
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-2">Popular Categories</h2>
@@ -47,24 +47,26 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.slice(0, 8).map((category) => (
-              <Card
-                key={category.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <Link
-                    href={`/skills?category=${category.id}`}
-                    className="block h-full"
-                  >
-                    <h3 className="font-medium mb-1">{category.name}</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">
-                      {category.count || 0} skills
-                    </p>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+            {categories.slice(0, 8).map((category) =>
+              category && category.id && category.name ? (
+                <Card
+                  key={category.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-6">
+                    <Link
+                      href={`/skills?category=${category.id}`}
+                      className="block h-full"
+                    >
+                      <h3 className="font-medium mb-1">{category.name}</h3>
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        {category.count || 0} skills
+                      </p>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : null
+            )}
           </div>
         </section>
       )}

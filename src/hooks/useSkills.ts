@@ -1,5 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { skillsService, SkillsQueryParams, Skill, SkillsResponse } from '@/services/skillsService';
+import { useState, useEffect, useCallback } from "react";
+import {
+  skillsService,
+  SkillsQueryParams,
+  Skill,
+  SkillsResponse,
+} from "@/services/skillsService";
 
 interface UseSkillsOptions {
   initialParams?: SkillsQueryParams;
@@ -8,41 +13,49 @@ interface UseSkillsOptions {
 
 export function useSkills(options: UseSkillsOptions = {}) {
   const { initialParams = {}, autoFetch = true } = options;
-  
+
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [params, setParams] = useState<SkillsQueryParams>(initialParams);
-  const [meta, setMeta] = useState<SkillsResponse['meta']>();
+  const [meta, setMeta] = useState<SkillsResponse["meta"]>();
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchSkills = useCallback(async (queryParams?: SkillsQueryParams) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const paramsToUse = queryParams || params;
-      const response = await skillsService.getAll(paramsToUse);
-      
-      setSkills(response.skills);
-      setTotalCount(response.totalCount);
-      setMeta(response.meta);
-      
-      return response;
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch skills'));
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params]);
+  const fetchSkills = useCallback(
+    async (queryParams?: SkillsQueryParams) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const paramsToUse = queryParams || params;
+        const response = await skillsService.getAll(paramsToUse);
+
+        // Ensure skills is always an array, even if the API response is unexpected
+        setSkills(response?.skills || []);
+        setTotalCount(response?.totalCount || 0);
+        setMeta(response?.meta);
+
+        return response;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch skills")
+        );
+        // Make sure skills is an empty array on error
+        setSkills([]);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [params]
+  );
 
   const updateParams = useCallback((newParams: Partial<SkillsQueryParams>) => {
-    setParams(prev => ({
+    setParams((prev) => ({
       ...prev,
       ...newParams,
       // Reset to page 1 when search criteria change
-      ...(('search' in newParams || 'category' in newParams) ? { page: 1 } : {})
+      ...("search" in newParams || "category" in newParams ? { page: 1 } : {}),
     }));
   }, []);
 

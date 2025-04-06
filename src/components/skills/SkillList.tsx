@@ -3,7 +3,6 @@
 import React from "react";
 import { useSkills } from "@/hooks/useSkills";
 import SkillCard from "./SkillCard";
-import { Button } from "@/components/ui/Button";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export interface SkillListProps {
@@ -19,7 +18,7 @@ export function SkillList({
   searchQuery = "",
   category,
   userId,
-  limit = 12,
+  limit = 6,
   showPagination = true,
   showActions = true,
 }: SkillListProps) {
@@ -59,8 +58,11 @@ export function SkillList({
     }
   };
 
+  // Ensure skills is always an array
+  const safeSkills = Array.isArray(skills) ? skills : [];
+
   // Loading skeleton
-  if (isLoading && skills.length === 0) {
+  if (isLoading && (!safeSkills || safeSkills.length === 0)) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: limit > 6 ? 6 : limit }).map((_, index) => (
@@ -89,7 +91,7 @@ export function SkillList({
   }
 
   // Empty state
-  if (skills.length === 0) {
+  if (!safeSkills || safeSkills.length === 0) {
     return (
       <div className="text-center py-10">
         <h3 className="text-xl font-semibold mb-2">No skills found</h3>
@@ -108,7 +110,7 @@ export function SkillList({
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {skills.map((skill) => (
+        {safeSkills.map((skill) => (
           <SkillCard key={skill.id} skill={skill} showActions={showActions} />
         ))}
       </div>

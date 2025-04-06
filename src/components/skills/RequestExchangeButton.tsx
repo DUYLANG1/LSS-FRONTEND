@@ -81,6 +81,11 @@ export function RequestExchangeButton({
         setExchangeStatus(null);
         setExchangeId(null);
         setExchangeDetails(null);
+
+        // Log message if provided
+        if (result && result.message) {
+          console.log(result.message);
+        }
       }
     } catch (error) {
       console.error("Error fetching exchange status:", error);
@@ -143,15 +148,17 @@ export function RequestExchangeButton({
   const getTooltipText = () => {
     if (!exchangeDetails) return "";
 
+    // Handle case where fromUserId might not exist
     const isRequester = exchangeDetails.fromUserId === session?.user?.id;
 
     // Safely access the skill titles with optional chaining and fallback values
+    // Use the current skill title as a fallback if we don't have the exchange details
     const otherSkill = isRequester
       ? exchangeDetails.toUserSkill?.title || "requested skill"
       : exchangeDetails.fromUserSkill?.title || "offered skill";
     const yourSkill = isRequester
       ? exchangeDetails.fromUserSkill?.title || "your skill"
-      : exchangeDetails.toUserSkill?.title || "requested skill";
+      : exchangeDetails.toUserSkill?.title || skillTitle || "requested skill";
 
     switch (exchangeStatus) {
       case "pending":

@@ -48,20 +48,22 @@ export default function SkillsPage() {
       <SearchBar autoSubmit={true} />
 
       {/* Featured categories (optional) */}
-      {categories && categories.length > 0 && (
+      {Array.isArray(categories) && categories.length > 0 && (
         <div className="py-2">
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm text-[var(--text-secondary)]">
               Popular categories:
             </span>
             {categories.slice(0, 5).map((category) => (
-              <div
-                key={category.id}
-                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[var(--card-border)] text-[var(--text-secondary)] hover:bg-[var(--card-border)]/80 cursor-pointer"
-                onClick={() => router.push(`/skills?category=${category.id}`)}
-              >
-                {category.name}
-              </div>
+              category && category.id && category.name ? (
+                <div
+                  key={category.id}
+                  className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[var(--card-border)] text-[var(--text-secondary)] hover:bg-[var(--card-border)]/80 cursor-pointer"
+                  onClick={() => router.push(`/skills?category=${category.id}`)}
+                >
+                  {category.name}
+                </div>
+              ) : null
             ))}
           </div>
         </div>
