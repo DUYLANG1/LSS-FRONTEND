@@ -12,7 +12,7 @@ import {
   FormSelect,
   FormTextArea,
   FormField,
-} from "@/components/form/export";
+} from "@/components/ui/Form";
 import { Skeleton } from "@/components/common/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";

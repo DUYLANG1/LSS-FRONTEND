@@ -18,7 +18,7 @@ import {
   FormSelect,
   FormTextArea,
   FormField,
-} from "@/components/form/export";
+} from "@/components/ui/Form";
 
 export default function EditSkillPage({
   params,
