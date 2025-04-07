@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -17,7 +17,7 @@ interface SearchBarProps {
 
 export function SearchBar({
   onSearch,
-  autoSubmit = false,
+  autoSubmit = true,
   debounceMs = 500,
 }: SearchBarProps) {
   const searchParams = useSearchParams();
@@ -28,8 +28,6 @@ export function SearchBar({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     searchParams.get("category")
   );
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || ""
   );
@@ -39,97 +37,111 @@ export function SearchBar({
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category");
 
-    // Update the search input value directly
-    if (searchInputRef.current && search !== searchInputRef.current.value) {
-      searchInputRef.current.value = search;
-    }
-
     setSearchQuery(search);
+    setSelectedCategory(category);
 
-    if (category !== selectedCategory) {
-      setSelectedCategory(category);
-    }
-  }, [searchParams, selectedCategory]);
+    // Only depend on searchParams to avoid circular dependencies
+  }, [searchParams]);
+
+  // Update URL with search parameters
+  const updateURL = React.useCallback(
+    (newCategory?: string | null, newSearch?: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      // Use the provided search value or current state
+      const searchToUse = newSearch !== undefined ? newSearch : searchQuery;
+
+      // Only set search param if there's actually a search value
+      if (searchToUse) {
+        params.set("search", searchToUse);
+      } else {
+        params.delete("search");
+      }
+
+      // Handle category parameter separately from search
+      const categoryToUse =
+        newCategory !== undefined ? newCategory : selectedCategory;
+      if (categoryToUse) {
+        params.set("category", categoryToUse);
+      } else {
+        params.delete("category");
+      }
+
+      // Reset to page 1 when search criteria change
+      params.delete("page");
+
+      // Update the URL without causing a full page refresh
+      const url = `/skills?${params.toString()}`;
+      router.push(url);
+    },
+    [searchParams, searchQuery, selectedCategory, router]
+  );
 
   // Create debounced search function
   const debouncedSearch = React.useCallback(
     debounce((search: string, category: string | null) => {
+      console.log("Debounced search triggered with:", { search, category });
       if (onSearch) {
         onSearch(search, category);
       } else {
         updateURL(category, search);
       }
     }, debounceMs),
-    [onSearch, debounceMs]
+    [onSearch, debounceMs, updateURL]
   );
 
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Get value directly from ref
-    const searchValue = searchInputRef.current?.value || "";
-    setSearchQuery(searchValue);
+    console.log("Form submitted with:", { searchQuery, selectedCategory });
 
     if (onSearch) {
-      onSearch(searchValue, selectedCategory);
+      onSearch(searchQuery, selectedCategory);
     } else {
-      updateURL(selectedCategory, searchValue);
+      // Use updateURL directly for immediate feedback
+      updateURL(selectedCategory, searchQuery);
     }
   };
 
   // Handle category change
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const category = e.target.value || null;
+    const value = e.target.value;
+    const category = value || null;
+
+    // Update local state immediately for responsive UI
     setSelectedCategory(category);
 
+    console.log("Category changed to:", category);
+
+    // For category changes, always update immediately for a responsive feel
     if (autoSubmit) {
-      // Get current search value from ref
-      const searchValue = searchInputRef.current?.value || "";
-      debouncedSearch(searchValue, category);
+      if (onSearch) {
+        onSearch(searchQuery, category);
+      } else {
+        // Use updateURL directly for immediate feedback
+        updateURL(category, searchQuery);
+      }
     }
   };
 
   // Handle search input change for auto-submit
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Always trigger the debounced search when autoSubmit is true
     if (autoSubmit) {
-      debouncedSearch(e.target.value, selectedCategory);
+      console.log("Auto-submitting search:", value);
+      // Use the updateURL function directly for immediate feedback
+      updateURL(selectedCategory, value);
     }
-  };
-
-  // Update URL with search parameters
-  const updateURL = (newCategory?: string | null, newSearch?: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    // Use the provided search value or get it from the ref
-    const searchToUse =
-      newSearch !== undefined ? newSearch : searchInputRef.current?.value || "";
-
-    // Only set search param if there's actually a search value
-    if (searchToUse) {
-      params.set("search", searchToUse);
-    } else {
-      params.delete("search");
-    }
-
-    // Handle category parameter separately from search
-    const categoryToUse =
-      newCategory !== undefined ? newCategory : selectedCategory;
-    if (categoryToUse) {
-      params.set("category", categoryToUse);
-    } else {
-      params.delete("category");
-    }
-
-    params.delete("page");
-    router.push(`/skills?${params.toString()}`);
   };
 
   // Ensure categories is an array and has the expected structure
   const safeCategories = Array.isArray(categories) ? categories : [];
 
   // Prepare category options for the select component
-  const categoryOptions: Array<{ value: string; label: string }> = [
+  const categoryOptions = [
     { value: "", label: "All Categories" },
     ...(safeCategories
       .map((category) => {
@@ -147,42 +159,66 @@ export function SearchBar({
         }
         return null;
       })
-      .filter(Boolean) as Array<{ value: string; label: string }>), // Remove any null entries and assert type
+      .filter(Boolean) as Array<{ value: string; label: string }>),
   ];
 
   return (
-    <Card>
-      <CardBody>
-        <form
-          onSubmit={handleSearch}
-          className="flex flex-col md:flex-row gap-4"
-        >
-          <div className="flex-1">
-            <Input
-              type="text"
-              ref={searchInputRef}
-              defaultValue={searchQuery}
-              placeholder="Search for skills..."
-              onChange={handleSearchInputChange}
-            />
-          </div>
+    <Card className="bg-[var(--card-background)] border border-[var(--card-border)] shadow-md">
+      <CardBody className="p-3 sm:p-4">
+        <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+            {/* Search input */}
+            <div className={"md:col-span-7"}>
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                placeholder="Search for skills..."
+                className="pl-10 h-12 w-full"
+                aria-label="Search input"
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-[var(--text-secondary)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
 
-          <div className="w-full md:w-64">
-            <Select
-              value={selectedCategory || ""}
-              onChange={handleCategoryChange}
-              options={categoryOptions}
-            />
-          </div>
+            {/* Category dropdown */}
+            <div className="md:col-span-3">
+              <Select
+                value={selectedCategory || ""}
+                onChange={handleCategoryChange}
+                options={categoryOptions}
+                className="h-12 w-full"
+                aria-label="Category filter"
+                // Note: disabled state can be used instead of isLoading
+                disabled={isLoading}
+              />
+            </div>
 
-          {!autoSubmit && (
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]"
-            >
-              Search
-            </button>
-          )}
+            <div className="md:col-span-2">
+              <Button
+                type="submit"
+                className="w-full h-12"
+                variant="default"
+                aria-label="Search button"
+              >
+                Search
+              </Button>
+            </div>
+          </div>
         </form>
       </CardBody>
     </Card>

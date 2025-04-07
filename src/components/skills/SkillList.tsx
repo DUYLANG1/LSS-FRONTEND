@@ -18,7 +18,7 @@ export function SkillList({
   searchQuery = "",
   category,
   userId,
-  limit = 6,
+  limit = 9,
   showPagination = true,
   showActions = true,
 }: SkillListProps) {
@@ -46,18 +46,29 @@ export function SkillList({
     },
   });
 
-  // Determine if pagination is needed based on total count and limit
-  const shouldShowPagination = showPagination && totalCount > limit;
+  // Determine if pagination is needed based on total pages from meta
+  const shouldShowPagination = showPagination && (meta?.totalPages || 0) > 1;
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
+    // Don't allow invalid page numbers
+    if (newPage < 1 || newPage > totalPages) {
+      return;
+    }
+
+    // Update the params for the API call
     updateParams({ page: newPage });
 
-    // Update URL with new page parameter
+    // Update URL with new page parameter while preserving other query params
     if (shouldShowPagination) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", newPage.toString());
-      router.push(`/skills?${params.toString()}`);
+
+      // Get the current path without the query string
+      const pathname = window.location.pathname;
+
+      // Push the new URL with updated query params
+      router.push(`${pathname}?${params.toString()}`);
     }
   };
 
@@ -107,9 +118,12 @@ export function SkillList({
     );
   }
 
-  // Calculate total pages - ensure we don't show pagination if there's only one page worth of items
+  // Get total pages from meta, with fallback calculation
   const totalPages =
     meta?.totalPages || Math.max(1, Math.ceil(totalCount / limit));
+
+  // Get current page from meta or URL
+  const currentPage = meta?.page || initialPage;
 
   return (
     <div>
@@ -132,17 +146,14 @@ export function SkillList({
           <nav className="flex items-center space-x-2">
             <button
               className="h-8 px-3 text-xs border border-[var(--card-border)] bg-transparent hover:bg-[var(--card-background)] rounded-md disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() =>
-                handlePageChange(meta?.page ? meta.page - 1 : initialPage - 1)
-              }
-              disabled={meta?.page === 1 || initialPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
             >
               Previous
             </button>
 
             {Array.from({ length: totalPages }).map((_, index) => {
               const pageNumber = index + 1;
-              const currentPage = meta?.page || initialPage;
 
               // Only show a window of 5 pages
               if (
@@ -175,10 +186,8 @@ export function SkillList({
 
             <button
               className="h-8 px-3 text-xs border border-[var(--card-border)] bg-transparent hover:bg-[var(--card-background)] rounded-md disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() =>
-                handlePageChange(meta?.page ? meta.page + 1 : initialPage + 1)
-              }
-              disabled={meta?.page === totalPages || initialPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
             >
               Next
             </button>

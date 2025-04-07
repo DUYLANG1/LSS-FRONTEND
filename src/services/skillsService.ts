@@ -66,16 +66,76 @@ export const skillsService = {
    */
   async getAll(params?: SkillsQueryParams): Promise<SkillsResponse> {
     try {
-      const response = await api.get<any>(API_ENDPOINTS.skills.list, {
-        params,
+      // Get the session to access the token, similar to the create method
+      const session = await import("next-auth/react").then((mod) =>
+        mod.getSession()
+      );
+
+      // Build URL with query parameters
+      const url = new URL(API_ENDPOINTS.skills.list);
+
+      // Set default limit to 9 cards per page
+      const defaultLimit = 9;
+
+      // Add query parameters if provided
+      if (params) {
+        // Apply default limit if not specified
+        const paramsWithDefaults = {
+          limit: defaultLimit,
+          ...params,
+        };
+
+        Object.entries(paramsWithDefaults).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            url.searchParams.append(key, String(value));
+          }
+        });
+      } else {
+        // If no params provided, still add the default limit
+        url.searchParams.append("limit", String(defaultLimit));
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.accessToken
+            ? {
+                Authorization: `Bearer ${session.accessToken}`,
+              }
+            : {}),
+        },
+        credentials: "include",
       });
 
-      // Handle the actual response format from the backend
-      // The backend returns { data: Skill[] } instead of { skills: Skill[], totalCount, meta }
-      if (response && response.data && Array.isArray(response.data)) {
+      if (!response.ok) {
+        console.error(
+          `Failed to fetch skills: ${response.status} ${response.statusText}`
+        );
+        throw new Error(
+          `Failed to fetch skills: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const responseData = await response.json();
+
+      // Check if the response has the expected structure with pagination metadata
+      if (responseData && responseData.data) {
+        // Extract skills data and pagination metadata from the response
+        const skillsData = Array.isArray(responseData.data)
+          ? responseData.data
+          : [];
+        const paginationMeta = responseData.meta || {};
+
+        // Calculate total count and pages if not provided by the backend
+        const totalItems = paginationMeta.total || skillsData.length;
+        const totalPages =
+          paginationMeta.totalPages ||
+          Math.max(1, Math.ceil(totalItems / (params?.limit || defaultLimit)));
+
         // Transform the response to match our expected format
         return {
-          skills: response.data.map((skill: any) => ({
+          skills: skillsData.map((skill: any) => ({
             id: skill.id,
             title: skill.title,
             description: skill.description,
@@ -93,15 +153,65 @@ export const skillsService = {
               name: skill.category?.name,
             },
           })),
-          totalCount: response.data.length,
+          totalCount: totalItems,
           meta: {
-            total: response.data.length,
-            page: params?.page || 1,
-            limit: params?.limit || 10,
-            totalPages: Math.max(
-              1,
-              Math.ceil(response.data.length / (params?.limit || 10))
-            ),
+            total: totalItems,
+            page: paginationMeta.page || params?.page || 1,
+            limit: paginationMeta.limit || params?.limit || defaultLimit,
+            totalPages: totalPages,
+          },
+        };
+      }
+
+      // Handle the case where the response is just an array of skills without metadata
+      else if (responseData && Array.isArray(responseData)) {
+        const skillsData = responseData;
+        const totalItems = skillsData.length;
+
+        // For this case, we need to estimate the total count based on the current page
+        // If we're on page 1 and got less than the limit, this is likely all the data
+        // Otherwise, we need to make an educated guess
+        const currentPage = params?.page || 1;
+        const currentLimit = params?.limit || defaultLimit;
+        const isLastPage = skillsData.length < currentLimit;
+
+        // Estimate total count - if it's the last page, we can calculate it precisely
+        // Otherwise, we make a minimum estimate based on what we know
+        const estimatedTotal =
+          isLastPage && currentPage > 1
+            ? (currentPage - 1) * currentLimit + skillsData.length
+            : Math.max(totalItems, currentPage * currentLimit);
+
+        const totalPages = Math.max(
+          1,
+          Math.ceil(estimatedTotal / currentLimit)
+        );
+
+        return {
+          skills: skillsData.map((skill: any) => ({
+            id: skill.id,
+            title: skill.title,
+            description: skill.description,
+            categoryId: skill.categoryId,
+            userId: skill.userId,
+            createdAt: skill.createdAt,
+            level: skill.level,
+            user: {
+              id: skill.user?.id,
+              name: skill.user?.name,
+              avatarUrl: skill.user?.avatar,
+            },
+            category: {
+              id: skill.category?.id,
+              name: skill.category?.name,
+            },
+          })),
+          totalCount: estimatedTotal,
+          meta: {
+            total: estimatedTotal,
+            page: currentPage,
+            limit: currentLimit,
+            totalPages: totalPages,
           },
         };
       }
@@ -113,7 +223,7 @@ export const skillsService = {
         meta: {
           total: 0,
           page: params?.page || 1,
-          limit: params?.limit || 10,
+          limit: params?.limit || 9,
           totalPages: 1, // Always at least 1 page
         },
       };
@@ -126,7 +236,7 @@ export const skillsService = {
         meta: {
           total: 0,
           page: params?.page || 1,
-          limit: params?.limit || 10,
+          limit: params?.limit || 9,
           totalPages: 1, // Always at least 1 page
         },
       };
