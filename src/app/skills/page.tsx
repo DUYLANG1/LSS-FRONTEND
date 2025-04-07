@@ -22,8 +22,9 @@ export default function SkillsPage() {
     }
   };
 
-  // Get current category from URL if it exists
+  // Get current category and search query from URL if they exist
   const currentCategory = searchParams.get("category");
+  const currentSearch = searchParams.get("search") || "";
   const currentCategoryName =
     currentCategory && categories
       ? categories.find((c) => c.id === currentCategory)?.name
@@ -92,7 +93,11 @@ export default function SkillsPage() {
       )}
 
       {/* Skills list with pagination */}
-      <SkillList showPagination={true} category={currentCategory} />
+      <SkillList
+        showPagination={true}
+        category={currentCategory}
+        searchQuery={currentSearch}
+      />
     </div>
   );
 }

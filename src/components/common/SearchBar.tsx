@@ -51,6 +51,8 @@ export function SearchBar({
       // Use the provided search value or current state
       const searchToUse = newSearch !== undefined ? newSearch : searchQuery;
 
+      console.log("Updating URL with search:", searchToUse);
+
       // Only set search param if there's actually a search value
       if (searchToUse) {
         params.set("search", searchToUse);
@@ -69,6 +71,9 @@ export function SearchBar({
 
       // Reset to page 1 when search criteria change
       params.delete("page");
+
+      // Log the final URL parameters
+      console.log("Final URL params:", params.toString());
 
       // Update the URL without causing a full page refresh
       const url = `/skills?${params.toString()}`;

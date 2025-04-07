@@ -46,6 +46,15 @@ export function SkillList({
     },
   });
 
+  // Update search parameters when props change
+  React.useEffect(() => {
+    console.log("SkillList props changed:", { searchQuery, category });
+    updateParams({
+      search: searchQuery,
+      category: category || undefined,
+    });
+  }, [searchQuery, category, updateParams]);
+
   // Determine if pagination is needed based on total pages from meta
   const shouldShowPagination = showPagination && (meta?.totalPages || 0) > 1;
 
