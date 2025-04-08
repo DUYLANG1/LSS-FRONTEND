@@ -23,9 +23,11 @@ export const API_ENDPOINTS = {
       `${API_BASE_BACKEND}/${API_PREFIX}/users/skills/${id}`,
   },
   exchanges: {
-    list: (id: string) =>
-      `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/user/${id}`,
+    list: (userId: string) =>
+      `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/user/${userId}`,
     create: `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests`,
+    getById: (id: string) =>
+      `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/${id}`,
     respond: (id: string) =>
       `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/${id}/respond`,
     status: (skillId: string, userId: string) =>

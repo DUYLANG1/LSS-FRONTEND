@@ -2,52 +2,65 @@ import { api } from "@/lib/api";
 import { API_ENDPOINTS } from "@/config/api";
 
 export enum ExchangeStatus {
-  PENDING = "PENDING",
-  ACCEPTED = "ACCEPTED",
-  REJECTED = "REJECTED",
-  COMPLETED = "COMPLETED",
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  COMPLETED = "completed",
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+}
+
+export interface Skill {
+  id: string;
+  title: string;
+  description: string;
 }
 
 export interface Exchange {
   id: string;
-  requesterId: string;
-  providerId: string;
-  skillId: string;
+  fromUserId: string;
+  toUserId: string;
+  offeredSkillId: string;
+  requestedSkillId: string;
   status: ExchangeStatus;
-  message?: string;
   createdAt: string;
   updatedAt: string;
-  skill: {
-    id: string;
-    title: string;
-  };
-  requester: {
-    id: string;
-    name: string;
-  };
-  provider: {
-    id: string;
-    name: string;
-  };
+  isActive: boolean;
+  deletedAt: string | null;
+  fromUser: User;
+  toUser: User;
+  offeredSkill: Skill;
+  requestedSkill: Skill;
 }
 
 export interface CreateExchangeRequest {
-  skillId: string;
-  providerId: string;
-  message?: string;
+  toUserId: string;
+  offeredSkillId: string;
+  requestedSkillId: string;
 }
 
 export interface RespondToExchangeRequest {
   status: ExchangeStatus.ACCEPTED | ExchangeStatus.REJECTED;
-  message?: string;
 }
 
 export const exchangeService = {
   /**
-   * Get all exchanges for a user
+   * Get all exchanges for a user (both sent and received)
    */
   async getUserExchanges(userId: string): Promise<Exchange[]> {
     return api.get<Exchange[]>(API_ENDPOINTS.exchanges.list(userId));
+  },
+
+  /**
+   * Get a specific exchange by ID
+   */
+  async getExchangeById(id: string): Promise<Exchange> {
+    return api.get<Exchange>(API_ENDPOINTS.exchanges.getById(id));
   },
 
   /**
@@ -58,7 +71,7 @@ export const exchangeService = {
   },
 
   /**
-   * Respond to an exchange request
+   * Respond to an exchange request (accept or reject)
    */
   async respondToExchange(
     exchangeId: string,

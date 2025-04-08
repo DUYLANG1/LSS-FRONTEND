@@ -50,25 +50,40 @@ export function ExchangeModal({
         throw new Error("User not authenticated");
       }
 
-      // Use the API endpoint which already includes the userId in the path
-      const response = await fetch(API_ENDPOINTS.users.skills(userId), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // This will include cookies in the request
-      });
+      // Import the API utility to use the centralized fetch with auth
+      const { api } = await import("@/lib/api");
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch your skills");
+      // Use the API utility which will automatically include the auth token
+      const response = await api.get(API_ENDPOINTS.users.skills(userId));
+
+      // Ensure we have an array of skills
+      let skillsArray = [];
+
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        skillsArray = response;
+      } else if (response && typeof response === "object") {
+        // Check for common response patterns
+        if (response.data && Array.isArray(response.data)) {
+          skillsArray = response.data;
+        } else if (response.skills && Array.isArray(response.skills)) {
+          skillsArray = response.skills;
+        } else if (response.results && Array.isArray(response.results)) {
+          skillsArray = response.results;
+        }
       }
 
-      const data = await response.json();
-      setUserSkills(data);
-      if (data.length > 0) {
-        setSelectedSkillId(data[0].id);
+      console.log("Skills response:", response);
+      console.log("Processed skills array:", skillsArray);
+
+      setUserSkills(skillsArray);
+      if (skillsArray.length > 0) {
+        setSelectedSkillId(skillsArray[0].id);
       }
     } catch (err) {
+      console.error("Error fetching skills:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
+      setUserSkills([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -81,23 +96,16 @@ export function ExchangeModal({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(API_ENDPOINTS.exchanges.create, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // This will include cookies in the request
-        body: JSON.stringify({
-          offeredSkillId: selectedSkillId,
-          requestedSkillId: requestedSkillId,
-          toUserId: skillOwnerId,
-          fromUserId: session.user.id,
-        }),
-      });
+      // Import the API utility to use the centralized fetch with auth
+      const { api } = await import("@/lib/api");
 
-      if (!response.ok) {
-        throw new Error("Failed to create exchange request");
-      }
+      // Use the API utility which will automatically include the auth token
+      await api.post(API_ENDPOINTS.exchanges.create, {
+        offeredSkillId: selectedSkillId,
+        requestedSkillId: requestedSkillId,
+        toUserId: skillOwnerId,
+        fromUserId: session.user.id,
+      });
 
       setSuccess(true);
       // Close modal after showing success message briefly

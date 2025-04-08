@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { API_ENDPOINTS } from "@/config/api";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 
-export function CreateExchangeForm() {
+interface CreateExchangeFormProps {
+  onSuccess?: () => void;
+}
+
+export function CreateExchangeForm({ onSuccess }: CreateExchangeFormProps) {
   const { createExchangeRequest } = useExchanges();
   const { data: session } = useSession();
 
@@ -20,6 +24,13 @@ export function CreateExchangeForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // New state for skill search
+  const [skillSearchQuery, setSkillSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<
+    Array<{ id: string; title: string; userId: string; userName: string }>
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Fetch user's skills when component mounts
   useEffect(() => {
@@ -36,27 +47,105 @@ export function CreateExchangeForm() {
         throw new Error("User not authenticated");
       }
 
-      const response = await fetch(API_ENDPOINTS.users.skills(userId), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      // Import the API utility to use the centralized fetch with auth
+      const { api } = await import("@/lib/api");
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch your skills");
+      // Use the API utility which will automatically include the auth token
+      const response = await api.get(API_ENDPOINTS.users.skills(userId));
+
+      // Ensure we have an array of skills
+      let skillsArray = [];
+
+      // Handle different response formats
+      if (Array.isArray(response)) {
+        skillsArray = response;
+      } else if (response && typeof response === "object") {
+        // Check for common response patterns
+        if (response.data && Array.isArray(response.data)) {
+          skillsArray = response.data;
+        } else if (response.skills && Array.isArray(response.skills)) {
+          skillsArray = response.skills;
+        } else if (response.results && Array.isArray(response.results)) {
+          skillsArray = response.results;
+        }
       }
 
-      const data = await response.json();
-      setUserSkills(data);
-      if (data.length > 0) {
-        setSelectedSkillId(data[0].id);
+      console.log("Skills response:", response);
+      console.log("Processed skills array:", skillsArray);
+
+      setUserSkills(skillsArray);
+      if (skillsArray.length > 0) {
+        setSelectedSkillId(skillsArray[0].id);
       }
     } catch (err) {
+      console.error("Error fetching skills:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
+      setUserSkills([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
+  }
+
+  // Search for skills based on query
+  async function searchSkills() {
+    if (!skillSearchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      setError(null);
+
+      // Import the API utility to use the centralized fetch with auth
+      const { api } = await import("@/lib/api");
+
+      // Use the API utility which will automatically include the auth token
+      const data = await api.get(`${API_ENDPOINTS.skills.list}`, {
+        params: { search: skillSearchQuery },
+      });
+
+      // Handle different response formats
+      let skillsData = [];
+      if (Array.isArray(data)) {
+        skillsData = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        skillsData = data.data;
+      } else if (data.skills && Array.isArray(data.skills)) {
+        skillsData = data.skills;
+      } else if (data.results && Array.isArray(data.results)) {
+        skillsData = data.results;
+      } else {
+        console.warn("Unexpected skill search response format:", data);
+        skillsData = [];
+      }
+
+      // Filter out the user's own skills
+      const filteredResults = skillsData.filter(
+        (skill: any) => skill.userId !== session?.user?.id
+      );
+
+      // Ensure each skill has the required fields
+      const processedResults = filteredResults.map((skill: any) => ({
+        id: skill.id,
+        title: skill.title || "Unknown Skill",
+        userId: skill.userId || "unknown",
+        userName: skill.userName || skill.user?.name || "Unknown User",
+      }));
+
+      setSearchResults(processedResults);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  // Handle skill selection from search results
+  function selectSkill(skillId: string, userId: string) {
+    setRequestedSkillId(skillId);
+    setToUserId(userId);
+    setSearchResults([]); // Clear search results after selection
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,6 +171,12 @@ export function CreateExchangeForm() {
         // Reset form
         setToUserId("");
         setRequestedSkillId("");
+        setSkillSearchQuery("");
+
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
 
         // Reset success message after 3 seconds
         setTimeout(() => {
@@ -119,44 +214,90 @@ export function CreateExchangeForm() {
 
       <ErrorDisplay error={error} />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="toUserId" className="block text-sm font-medium mb-1">
-            User ID to Exchange With
-          </label>
-          <input
-            id="toUserId"
-            type="text"
-            value={toUserId}
-            onChange={(e) => setToUserId(e.target.value)}
-            placeholder="Enter user ID"
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            required
-          />
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Skill Search Section */}
+        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900/30 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+            Find a Skill to Request
+          </h3>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={skillSearchQuery}
+              onChange={(e) => setSkillSearchQuery(e.target.value)}
+              placeholder="Search for skills by name..."
+              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={searchSkills}
+              isLoading={isSearching}
+              disabled={isSearching || !skillSearchQuery.trim()}
+            >
+              Search
+            </Button>
+          </div>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {searchResults.map((skill) => (
+                  <li
+                    key={skill.id}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                    onClick={() => selectSkill(skill.id, skill.userId)}
+                  >
+                    <div className="font-medium">{skill.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      by {skill.userName}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {isSearching && (
+            <div className="text-center py-2">
+              <div className="animate-pulse">Searching...</div>
+            </div>
+          )}
+
+          {!isSearching && skillSearchQuery && searchResults.length === 0 && (
+            <div className="text-center py-2 text-gray-500 dark:text-gray-400">
+              No skills found. Try a different search term.
+            </div>
+          )}
         </div>
 
-        <div>
-          <label
-            htmlFor="requestedSkillId"
-            className="block text-sm font-medium mb-1"
-          >
-            Skill ID You're Requesting
-          </label>
-          <input
-            id="requestedSkillId"
-            type="text"
-            value={requestedSkillId}
-            onChange={(e) => setRequestedSkillId(e.target.value)}
-            placeholder="Enter skill ID you want"
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            required
-          />
-        </div>
+        {/* Selected Skill Information */}
+        {requestedSkillId && toUserId && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h4 className="font-medium text-blue-800 dark:text-blue-300 text-sm">
+              Selected Skill
+            </h4>
+            <p className="text-blue-700 dark:text-blue-400">
+              Skill ID: {requestedSkillId.substring(0, 8)}...
+            </p>
+            <p className="text-blue-700 dark:text-blue-400">
+              User ID: {toUserId.substring(0, 8)}...
+            </p>
+          </div>
+        )}
 
+        {/* Hidden fields for form submission */}
+        <input type="hidden" id="toUserId" value={toUserId} />
+        <input type="hidden" id="requestedSkillId" value={requestedSkillId} />
+
+        {/* Your Skill to Offer */}
         <div>
           <label
             htmlFor="offeredSkillId"
-            className="block text-sm font-medium mb-1"
+            className="block text-sm font-medium mb-2"
           >
             Your Skill to Offer
           </label>
@@ -167,7 +308,7 @@ export function CreateExchangeForm() {
               id="offeredSkillId"
               value={selectedSkillId}
               onChange={(e) => setSelectedSkillId(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               disabled={loading || userSkills.length === 0}
               required
             >
@@ -184,23 +325,27 @@ export function CreateExchangeForm() {
           )}
 
           {userSkills.length === 0 && !loading && (
-            <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
-              You need to create a skill before you can request an exchange.{" "}
+            <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <p className="text-sm text-orange-700 dark:text-orange-400">
+                You need to create a skill before you can request an exchange.
+              </p>
               <a
                 href="/skills/create"
-                className="underline font-medium text-orange-600 dark:text-orange-400"
+                className="mt-2 inline-block px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors text-sm font-medium"
               >
-                Create a skill
+                Create a Skill
               </a>
-            </p>
+            </div>
           )}
         </div>
 
         <Button
           type="submit"
           variant="default"
-          className="w-full"
-          disabled={loading || userSkills.length === 0}
+          className="w-full py-3"
+          disabled={
+            loading || userSkills.length === 0 || !requestedSkillId || !toUserId
+          }
           isLoading={loading}
         >
           Create Exchange Request

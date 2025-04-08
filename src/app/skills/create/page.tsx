@@ -205,7 +205,7 @@ export default function CreateSkillPage() {
           </FormField>
 
           {/* Add FormFieldWrapper for Skill Level */}
-          <FormField
+          {/* <FormField
             id="level"
             label="Skill Level"
             tooltip="Select your proficiency level in this skill"
@@ -229,7 +229,7 @@ export default function CreateSkillPage() {
                 </option>
               ))}
             </FormSelect>
-          </FormField>
+          </FormField> */}
 
           {/* FormFieldWrapper for Description remains the same */}
           <FormField
