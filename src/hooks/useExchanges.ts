@@ -23,6 +23,27 @@ export interface Exchange {
     email?: string;
     avatar?: string;
   };
+  // Backend provides these properties
+  offeredSkill?: {
+    id: string;
+    title: string;
+    description?: string;
+    category?: {
+      id: number;
+      name: string;
+      description?: string;
+    };
+  };
+  requestedSkill?: {
+    id: string;
+    title: string;
+    description?: string;
+    category?: {
+      id: number;
+      name: string;
+      description?: string;
+    };
+  };
   // These will be populated on the frontend if needed
   fromUserSkill?: {
     id: string;
@@ -161,15 +182,32 @@ export function useExchanges() {
 
       // Process each exchange to ensure it has the required fields
       const processedExchanges = exchangesData.map((exchange) => {
-        // Ensure fromUserSkill and toUserSkill are populated
-        if (!exchange.fromUserSkill && exchange.offeredSkillId) {
+        // Map offeredSkill to fromUserSkill if available
+        if (exchange.offeredSkill) {
+          exchange.fromUserSkill = {
+            id: exchange.offeredSkill.id,
+            title: exchange.offeredSkill.title,
+            description: exchange.offeredSkill.description,
+            category: exchange.offeredSkill.category?.name,
+          };
+        } else if (!exchange.fromUserSkill && exchange.offeredSkillId) {
+          // Fallback if offeredSkill is not available
           exchange.fromUserSkill = {
             id: exchange.offeredSkillId,
             title: "Unknown Skill",
           };
         }
 
-        if (!exchange.toUserSkill && exchange.requestedSkillId) {
+        // Map requestedSkill to toUserSkill if available
+        if (exchange.requestedSkill) {
+          exchange.toUserSkill = {
+            id: exchange.requestedSkill.id,
+            title: exchange.requestedSkill.title,
+            description: exchange.requestedSkill.description,
+            category: exchange.requestedSkill.category?.name,
+          };
+        } else if (!exchange.toUserSkill && exchange.requestedSkillId) {
+          // Fallback if requestedSkill is not available
           exchange.toUserSkill = {
             id: exchange.requestedSkillId,
             title: "Unknown Skill",
@@ -248,11 +286,46 @@ export function useExchanges() {
 
         if (data.exchange) {
           // Already in the expected format
+          // Map offeredSkill/requestedSkill to fromUserSkill/toUserSkill if needed
+          if (data.exchange.offeredSkill && !data.exchange.fromUserSkill) {
+            data.exchange.fromUserSkill = {
+              id: data.exchange.offeredSkill.id,
+              title: data.exchange.offeredSkill.title,
+              description: data.exchange.offeredSkill.description,
+              category: data.exchange.offeredSkill.category?.name,
+            };
+          }
+          if (data.exchange.requestedSkill && !data.exchange.toUserSkill) {
+            data.exchange.toUserSkill = {
+              id: data.exchange.requestedSkill.id,
+              title: data.exchange.requestedSkill.title,
+              description: data.exchange.requestedSkill.description,
+              category: data.exchange.requestedSkill.category?.name,
+            };
+          }
           return data;
         } else if (data.data) {
           // Transform from { data: { ... } } to { exchange: { ... } }
+          const exchange = data.data;
+          // Map offeredSkill/requestedSkill to fromUserSkill/toUserSkill if needed
+          if (exchange.offeredSkill && !exchange.fromUserSkill) {
+            exchange.fromUserSkill = {
+              id: exchange.offeredSkill.id,
+              title: exchange.offeredSkill.title,
+              description: exchange.offeredSkill.description,
+              category: exchange.offeredSkill.category?.name,
+            };
+          }
+          if (exchange.requestedSkill && !exchange.toUserSkill) {
+            exchange.toUserSkill = {
+              id: exchange.requestedSkill.id,
+              title: exchange.requestedSkill.title,
+              description: exchange.requestedSkill.description,
+              category: exchange.requestedSkill.category?.name,
+            };
+          }
           return {
-            exchange: data.data,
+            exchange: exchange,
           };
         } else if (data.exists !== undefined) {
           // Transform from { exists: boolean, status: string } to { exchange: { ... } }

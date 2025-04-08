@@ -9,16 +9,8 @@ import { ExchangeCard } from "@/components/exchanges/ExchangeCard";
 
 export default function ExchangesPage() {
   const { data: session } = useSession();
-  const {
-    exchanges,
-    loading,
-    error,
-    respondToExchange,
-    refreshExchanges,
-    filters,
-    updateFilters,
-    clearFilters,
-  } = useExchanges();
+  const { exchanges, loading, error, respondToExchange, refreshExchanges } =
+    useExchanges();
 
   const [activeTab, setActiveTab] = useState<"all" | "requested" | "received">(
     "all"

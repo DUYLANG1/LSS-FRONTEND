@@ -40,20 +40,30 @@ export function ExchangeCard({
   };
 
   // Determine which skills are being offered and requested
+  // First try to use fromUserSkill/toUserSkill (mapped from backend)
+  // If not available, try offeredSkill/requestedSkill directly from backend
   const offeredSkill = isRequester
-    ? exchange.fromUserSkill?.title || "Unknown skill"
-    : exchange.toUserSkill?.title || "Unknown skill";
+    ? exchange.fromUserSkill?.title ||
+      exchange.offeredSkill?.title ||
+      "Unknown skill"
+    : exchange.toUserSkill?.title ||
+      exchange.requestedSkill?.title ||
+      "Unknown skill";
   const requestedSkill = isRequester
-    ? exchange.toUserSkill?.title || "Unknown skill"
-    : exchange.fromUserSkill?.title || "Unknown skill";
+    ? exchange.toUserSkill?.title ||
+      exchange.requestedSkill?.title ||
+      "Unknown skill"
+    : exchange.fromUserSkill?.title ||
+      exchange.offeredSkill?.title ||
+      "Unknown skill";
 
   // Get skill IDs for linking
   const offeredSkillId = isRequester
-    ? exchange.offeredSkillId
-    : exchange.requestedSkillId;
+    ? exchange.offeredSkillId || exchange.fromUserSkill?.id
+    : exchange.requestedSkillId || exchange.toUserSkill?.id;
   const requestedSkillId = isRequester
-    ? exchange.requestedSkillId
-    : exchange.offeredSkillId;
+    ? exchange.requestedSkillId || exchange.toUserSkill?.id
+    : exchange.offeredSkillId || exchange.fromUserSkill?.id;
 
   // Format the date
   const formattedDate = exchange.createdAt
@@ -146,7 +156,7 @@ export function ExchangeCard({
 
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-5">
         {/* Header with status and date */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
@@ -181,16 +191,17 @@ export function ExchangeCard({
         </div>
 
         {/* Exchange details */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-2">
-          <div className="flex items-center gap-3 flex-1">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6 pt-2">
+          {/* Left side - First user */}
+          <div className="flex items-start gap-3 flex-1 w-full md:w-auto">
             <UserAvatar
               name={isRequester ? "You" : safeCurrentUser.name}
               imageUrl={safeCurrentUser.avatar}
               size="lg"
-              className="border-2 border-gray-200 dark:border-gray-700"
+              className="border-2 border-gray-200 dark:border-gray-700 flex-shrink-0"
             />
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
+            <div className="flex flex-col min-w-0">
+              <p className="font-medium text-gray-900 dark:text-white truncate">
                 {isRequester ? "You" : safeCurrentUser.name}
               </p>
               <div className="mt-1">
@@ -199,7 +210,7 @@ export function ExchangeCard({
                 </p>
                 <Link
                   href={offeredSkillId ? `/skills/${offeredSkillId}` : "#"}
-                  className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors truncate max-w-full"
                 >
                   {offeredSkill}
                 </Link>
@@ -207,7 +218,8 @@ export function ExchangeCard({
             </div>
           </div>
 
-          <div className="flex items-center self-center my-2 md:my-0">
+          {/* Middle - Exchange icon */}
+          <div className="flex items-center self-center my-2 md:my-0 flex-shrink-0">
             <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -226,15 +238,16 @@ export function ExchangeCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-1">
+          {/* Right side - Second user */}
+          <div className="flex items-start gap-3 flex-1 w-full md:w-auto">
             <UserAvatar
               name={isRequester ? safeOtherUser.name : "You"}
               imageUrl={safeOtherUser.avatar}
               size="lg"
-              className="border-2 border-gray-200 dark:border-gray-700"
+              className="border-2 border-gray-200 dark:border-gray-700 flex-shrink-0"
             />
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
+            <div className="flex flex-col min-w-0">
+              <p className="font-medium text-gray-900 dark:text-white truncate">
                 {isRequester ? safeOtherUser.name : "You"}
               </p>
               <div className="mt-1">
@@ -243,7 +256,7 @@ export function ExchangeCard({
                 </p>
                 <Link
                   href={requestedSkillId ? `/skills/${requestedSkillId}` : "#"}
-                  className="inline-block px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                  className="inline-block px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors truncate max-w-full"
                 >
                   {requestedSkill}
                 </Link>
@@ -259,7 +272,7 @@ export function ExchangeCard({
               variant="success"
               size="sm"
               onClick={() => onAccept(exchange.id)}
-              className="px-4"
+              className="px-4 min-w-[100px]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -281,7 +294,7 @@ export function ExchangeCard({
               variant="danger"
               size="sm"
               onClick={() => onReject(exchange.id)}
-              className="px-4"
+              className="px-4 min-w-[100px]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -304,10 +317,10 @@ export function ExchangeCard({
 
         {/* Show message for accepted exchanges */}
         {exchange.status === "accepted" && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-green-600 dark:text-green-400 flex items-center">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-green-600 dark:text-green-400 flex items-start">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
+              className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -319,8 +332,10 @@ export function ExchangeCard({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Contact information is available in your profile. You can now
-            arrange the skill exchange!
+            <span>
+              Contact information is available in your profile. You can now
+              arrange the skill exchange!
+            </span>
           </div>
         )}
       </div>
