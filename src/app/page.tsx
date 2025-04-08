@@ -68,7 +68,7 @@ export default function Home() {
                 >
                   <CardContent className="p-6">
                     <Link
-                      href={`/skills?category=${category.id}`}
+                      href={`/skills?category=${String(category.id)}`}
                       className="block h-full"
                     >
                       <h3 className="font-medium mb-1">{category.name}</h3>

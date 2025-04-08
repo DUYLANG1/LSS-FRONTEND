@@ -87,7 +87,20 @@ export const skillsService = {
 
         Object.entries(paramsWithDefaults).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            url.searchParams.append(key, String(value));
+            // Special handling for category parameter - ensure it's a number
+            if (key === "category") {
+              // Convert string ID to number if it's a valid number
+              const categoryId = parseInt(String(value), 10);
+              if (!isNaN(categoryId)) {
+                url.searchParams.append(key, String(categoryId));
+              } else {
+                console.warn(
+                  `Invalid category ID: ${value}, not adding to query params`
+                );
+              }
+            } else {
+              url.searchParams.append(key, String(value));
+            }
           }
         });
       } else {

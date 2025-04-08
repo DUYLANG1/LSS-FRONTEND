@@ -27,7 +27,7 @@ export default function SkillsPage() {
   const currentSearch = searchParams.get("search") || "";
   const currentCategoryName =
     currentCategory && categories
-      ? categories.find((c) => c.id === currentCategory)?.name
+      ? categories.find((c) => String(c.id) === currentCategory)?.name
       : null;
 
   return (
@@ -70,7 +70,7 @@ export default function SkillsPage() {
                 <div
                   key={category.id}
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold cursor-pointer ${
-                    currentCategory === category.id
+                    currentCategory === String(category.id)
                       ? "bg-[var(--primary)] text-white"
                       : "bg-[var(--card-border)] text-[var(--text-secondary)] hover:bg-[var(--card-border)]/80"
                   }`}

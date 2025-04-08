@@ -48,7 +48,6 @@ export function SkillList({
 
   // Update search parameters when props change
   React.useEffect(() => {
-    console.log("SkillList props changed:", { searchQuery, category });
     updateParams({
       search: searchQuery,
       category: category || undefined,

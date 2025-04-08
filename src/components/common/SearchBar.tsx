@@ -158,7 +158,7 @@ export function SearchBar({
           "name" in category
         ) {
           return {
-            value: category.id,
+            value: String(category.id), // Ensure ID is a string
             label: category.name,
           };
         }
