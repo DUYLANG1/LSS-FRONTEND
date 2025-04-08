@@ -4,6 +4,7 @@ import { Exchange } from "@/hooks/useExchanges";
 import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { UserAvatar } from "@/components/user/UserAvatar";
 
 interface ExchangeCardProps {
   exchange: Exchange;
@@ -182,10 +183,11 @@ export function ExchangeCard({
         {/* Exchange details */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-2">
           <div className="flex items-center gap-3 flex-1">
-            <img
-              src={safeCurrentUser.avatar || "/placeholder-avatar.jpg"}
-              alt={`${safeCurrentUser.name}'s avatar`}
-              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+            <UserAvatar
+              name={isRequester ? "You" : safeCurrentUser.name}
+              imageUrl={safeCurrentUser.avatar}
+              size="lg"
+              className="border-2 border-gray-200 dark:border-gray-700"
             />
             <div>
               <p className="font-medium text-gray-900 dark:text-white">
@@ -225,10 +227,11 @@ export function ExchangeCard({
           </div>
 
           <div className="flex items-center gap-3 flex-1">
-            <img
-              src={safeOtherUser.avatar || "/placeholder-avatar.jpg"}
-              alt={`${safeOtherUser.name}'s avatar`}
-              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+            <UserAvatar
+              name={isRequester ? safeOtherUser.name : "You"}
+              imageUrl={safeOtherUser.avatar}
+              size="lg"
+              className="border-2 border-gray-200 dark:border-gray-700"
             />
             <div>
               <p className="font-medium text-gray-900 dark:text-white">

@@ -5,9 +5,7 @@ import { useSession } from "next-auth/react";
 import { Loading } from "@/components/common/Loading";
 import { Button } from "@/components/ui/Button";
 import { useExchanges, Exchange } from "@/hooks/useExchanges";
-import { CreateExchangeForm } from "@/components/exchanges/CreateExchangeForm";
 import { ExchangeCard } from "@/components/exchanges/ExchangeCard";
-import { ExchangeFilter } from "@/components/exchanges/ExchangeFilter";
 
 export default function ExchangesPage() {
   const { data: session } = useSession();
@@ -22,9 +20,9 @@ export default function ExchangesPage() {
     clearFilters,
   } = useExchanges();
 
-  const [activeTab, setActiveTab] = useState<
-    "all" | "pending" | "active" | "requested" | "received"
-  >("all");
+  const [activeTab, setActiveTab] = useState<"all" | "requested" | "received">(
+    "all"
+  );
 
   // Add a cooldown for manual refresh to prevent spamming
   const [refreshCooldown, setRefreshCooldown] = useState(false);
@@ -71,8 +69,6 @@ export default function ExchangesPage() {
 
   // Filter exchanges based on active tab
   const filteredExchanges = exchangesArray.filter((exchange) => {
-    if (activeTab === "pending") return exchange.status === "pending";
-    if (activeTab === "active") return exchange.status === "accepted";
     if (activeTab === "requested")
       return exchange.fromUserId === session?.user?.id;
     if (activeTab === "received")
@@ -112,11 +108,9 @@ export default function ExchangesPage() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Skill Exchanges
-          </h1>
+          <h1 className="text-3xl font-bold">My Exchanges</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage your skill exchange requests and offers.
+            View and manage your existing skill exchanges.
           </p>
         </div>
         <Button
@@ -148,27 +142,9 @@ export default function ExchangesPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Create Exchange Form */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold mb-4">
-              Create Exchange Request
-            </h2>
-            <CreateExchangeForm onSuccess={refreshExchanges} />
-          </div>
-
-          {/* Filters */}
-          <ExchangeFilter
-            filters={filters}
-            onFilterChange={updateFilters}
-            onClearFilters={clearFilters}
-          />
-        </div>
-
+      <div className="grid grid-cols-1 gap-6 mb-8">
         {/* Main Content */}
-        <div className="lg:col-span-3">
+        <div>
           {/* Tabs */}
           <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700 mb-6">
             <button
@@ -201,26 +177,6 @@ export default function ExchangesPage() {
             >
               Received
             </button>
-            <button
-              className={`py-2 px-4 font-medium ${
-                activeTab === "pending"
-                  ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-              }`}
-              onClick={() => setActiveTab("pending")}
-            >
-              Pending
-            </button>
-            <button
-              className={`py-2 px-4 font-medium ${
-                activeTab === "active"
-                  ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-              }`}
-              onClick={() => setActiveTab("active")}
-            >
-              Active
-            </button>
           </div>
 
           {/* Exchange Cards */}
@@ -230,7 +186,7 @@ export default function ExchangesPage() {
                 ([skillTitle, exchanges]) => (
                   <div key={skillTitle} className="space-y-4">
                     {activeTab === "requested" && (
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
                         {skillTitle} ({exchanges.length})
                       </h3>
                     )}
@@ -267,21 +223,15 @@ export default function ExchangesPage() {
                     ? "You don't have any exchanges yet."
                     : activeTab === "requested"
                     ? "You haven't requested any skill exchanges yet."
-                    : activeTab === "received"
-                    ? "You haven't received any exchange requests yet."
-                    : activeTab === "pending"
-                    ? "You don't have any pending exchanges."
-                    : "You don't have any active exchanges."}
+                    : "You haven't received any exchange requests yet."}
                 </p>
                 <div className="mt-4">
-                  {activeTab === "all" || activeTab === "requested" ? (
-                    <a
-                      href="/skills"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Browse skills to start an exchange
-                    </a>
-                  ) : null}
+                  <a
+                    href="/skills"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Browse Skills to Start Exchanges
+                  </a>
                 </div>
               </div>
             )}
