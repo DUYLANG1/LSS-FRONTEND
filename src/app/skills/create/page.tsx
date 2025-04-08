@@ -175,7 +175,7 @@ export default function CreateSkillPage() {
               name="category"
               options={categories.map((c) => ({ id: c.id, name: c.name }))}
               required
-              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="h-full w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               defaultValue="" // Add a default empty value
             >
               <option value="" disabled>
@@ -219,7 +219,7 @@ export default function CreateSkillPage() {
                 id: level,
                 name: level.charAt(0) + level.slice(1).toLowerCase(),
               }))}
-              className="w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="h-full w-full px-4 py-3 border border-[var(--card-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               defaultValue=""
             >
               <option value="">Select a level (optional)</option>

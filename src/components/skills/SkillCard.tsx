@@ -48,23 +48,28 @@ export default function SkillCard({
     router.push(`/skills/edit/${skill.id}`);
   };
 
+  const handleCardClick = () => {
+    router.push(`/skills/${skill.id}`);
+  };
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-200">
+    <Card
+      className="h-full flex flex-col hover:shadow-md transition-shadow duration-200 cursor-pointer relative"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">
-            <Link
-              href={`/skills/${skill.id}`}
-              className="hover:text-[var(--primary)] transition-colors"
-            >
+            <span className="hover:text-[var(--primary)] transition-colors">
               {skill.title}
-            </Link>
+            </span>
           </CardTitle>
           {skill.level && (
             <div
               className={`${badgeVariants({ variant: "outline" })} ${
                 SkillLevelColors[skill.level]
               }`}
+              onClick={(e) => e.stopPropagation()}
             >
               {skill.level.charAt(0) + skill.level.slice(1).toLowerCase()}
             </div>
@@ -116,7 +121,7 @@ export default function SkillCard({
                   Edit
                 </Button>
               ) : (
-                <div onClick={(e) => e.preventDefault()}>
+                <div onClick={(e) => e.stopPropagation()}>
                   <RequestExchangeButton
                     skillId={skill.id}
                     skillTitle={skill.title}
