@@ -178,8 +178,8 @@ export default function ExchangesPage() {
                 ([skillTitle, exchanges]) => (
                   <div key={skillTitle} className="space-y-4">
                     {activeTab === "requested" && (
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-                        {skillTitle} ({exchanges.length})
+                      <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 dark:border-blue-400 pb-2 mb-3 inline-block">
+                        {skillTitle}
                       </h3>
                     )}
 
