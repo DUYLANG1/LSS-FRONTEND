@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useSession } from "next-auth/react";
 import { API_ENDPOINTS } from "@/config/api";
 import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
+import { ToastContext } from "@/components/providers/ToastProvider";
 
 interface ExchangeModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function ExchangeModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { data: session } = useSession();
+  const toast = useContext(ToastContext);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -108,12 +110,25 @@ export function ExchangeModal({
       });
 
       setSuccess(true);
+      // Show success toast notification
+      if (toast) {
+        toast.success(
+          "Exchange request sent successfully! Redirecting to exchanges page..."
+        );
+      }
+
       // Close modal after showing success message briefly
       setTimeout(() => {
-        onClose();
-      }, 1500);
+        onClose(); // This will trigger fetchExchangeStatus in the parent component
+        // Redirect to exchanges page after successful request
+        window.location.href = "/exchanges";
+      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      // Show error toast notification
+      if (toast) {
+        toast.error("Failed to send exchange request. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
