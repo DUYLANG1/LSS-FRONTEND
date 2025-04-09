@@ -30,7 +30,7 @@ export const API_ENDPOINTS = {
       `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/${id}`,
     respond: (id: string) =>
       `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/${id}/respond`,
-    status: (skillId: string, userId: string) =>
-      `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/status?skillId=${skillId}&userId=${userId}`,
+    status: (userId: string) =>
+      `${API_BASE_BACKEND}/${API_PREFIX}/exchange-requests/status?userId=${userId}`,
   },
 };

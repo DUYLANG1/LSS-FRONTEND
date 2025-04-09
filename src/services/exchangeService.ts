@@ -82,11 +82,65 @@ export const exchangeService = {
 
   /**
    * Check if an exchange request exists between a user and a skill
+   * @param userId The user ID to check exchanges for
+   * @param skillId Optional skill ID to filter by
    */
   async checkExchangeStatus(
-    skillId: string,
-    userId: string
-  ): Promise<{ exists: boolean; status?: ExchangeStatus }> {
-    return api.get(API_ENDPOINTS.exchanges.status(skillId, userId));
+    userId: string,
+    skillId?: string
+  ): Promise<{
+    data: {
+      requests: Exchange[];
+      pendingRequests: Exchange[];
+      acceptedRequests: Exchange[];
+      rejectedRequests: Exchange[];
+      counts: {
+        total: number;
+        pending: number;
+        accepted: number;
+        rejected: number;
+      };
+    };
+  }> {
+    // Get all exchanges for the user
+    const response = await api.get(API_ENDPOINTS.exchanges.status(userId));
+
+    // If skillId is provided, filter the results
+    if (skillId && response.data && response.data.requests) {
+      // Find exchanges related to the specified skill
+      const filteredRequests = response.data.requests.filter(
+        (req: Exchange) =>
+          req.requestedSkillId === skillId || req.offeredSkillId === skillId
+      );
+
+      if (filteredRequests.length > 0) {
+        // Return only the exchanges related to the skill
+        return {
+          data: {
+            ...response.data,
+            requests: filteredRequests,
+            // Also filter the status-specific arrays
+            pendingRequests: response.data.pendingRequests.filter(
+              (req: Exchange) =>
+                req.requestedSkillId === skillId ||
+                req.offeredSkillId === skillId
+            ),
+            acceptedRequests: response.data.acceptedRequests.filter(
+              (req: Exchange) =>
+                req.requestedSkillId === skillId ||
+                req.offeredSkillId === skillId
+            ),
+            rejectedRequests: response.data.rejectedRequests.filter(
+              (req: Exchange) =>
+                req.requestedSkillId === skillId ||
+                req.offeredSkillId === skillId
+            ),
+          },
+        };
+      }
+    }
+
+    // Return the full response if no skillId provided or no matching exchanges found
+    return response;
   },
 };

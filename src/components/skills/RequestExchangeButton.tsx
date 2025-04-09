@@ -62,23 +62,48 @@ export function RequestExchangeButton({
 
   // Fetch exchange status directly from API
   async function fetchExchangeStatus() {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.error("Cannot fetch exchange status: No user session");
+      return;
+    }
 
     // Prevent fetching more than once every 10 seconds unless explicitly requested
     const now = Date.now();
-    if (now - lastFetchTime.current < 10000 && loading) {
+    if (
+      now - lastFetchTime.current < 10000 &&
+      loading &&
+      lastFetchTime.current !== 0
+    ) {
+      console.log("Skipping fetchExchangeStatus due to throttling", {
+        timeSinceLastFetch: now - lastFetchTime.current,
+        loading,
+        lastFetchTime: lastFetchTime.current,
+      });
       return;
     }
+
+    console.log("Fetching exchange status for:", {
+      skillId,
+      userId: session.user.id,
+      timestamp: new Date().toISOString(),
+    });
 
     lastFetchTime.current = now;
     setLoading(true);
 
     try {
       // Call the API to get real exchange status from database
+      console.log("Calling checkExchangeStatusForSkill with params:", {
+        skillId,
+        userId: session.user.id,
+      });
+
       const result = await checkExchangeStatusForSkill(
         skillId,
         session.user.id
       );
+
+      console.log("Exchange status result:", result);
 
       if (result && result.exchange) {
         // Update with the latest status from the ExchangeRequest table
@@ -188,22 +213,82 @@ export function RequestExchangeButton({
 
   // Handle direct exchange request when user has only one skill
   const handleDirectExchange = async (offeredSkillId: string) => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.error("Cannot create exchange: No user session");
+      return;
+    }
+
+    console.log("Starting direct exchange with:", {
+      skillOwnerId,
+      offeredSkillId,
+      skillId,
+      currentUserId: session.user.id,
+    });
 
     setLoading(true);
     try {
+      // Make sure we're passing the parameters in the correct order:
+      // toUserId, offeredSkillId, requestedSkillId
+      console.log("Calling createExchangeRequest with params:", {
+        toUserId: skillOwnerId,
+        offeredSkillId,
+        requestedSkillId: skillId,
+      });
+
       const success = await createExchangeRequest(
         skillOwnerId,
         offeredSkillId,
         skillId
       );
 
-      if (success) {
-        // Fetch the actual exchange status from the server to get the real exchange ID
-        // This ensures we have the correct data from the backend
-        await fetchExchangeStatus();
+      console.log("createExchangeRequest result:", success);
 
-        // Show success toast notification
+      if (success) {
+        console.log("Exchange request created successfully");
+        // Immediately update the UI to show pending status
+        // This gives instant feedback to the user
+        setExchangeStatus("pending");
+
+        // Create a minimal exchange details object for the UI
+        const tempExchangeDetails: Exchange = {
+          id: `temp-${Date.now()}`, // Temporary ID until we fetch the real one
+          status: "pending" as "pending", // Explicitly type as literal
+          fromUserId: session.user.id,
+          toUserId: skillOwnerId,
+          fromUserSkill: {
+            id: offeredSkillId,
+            title:
+              userSkills.find((skill) => skill.id === offeredSkillId)?.title ||
+              "Your skill",
+          },
+          toUserSkill: {
+            id: skillId,
+            title: skillTitle,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        console.log("Setting temporary exchange details:", tempExchangeDetails);
+        setExchangeDetails(tempExchangeDetails);
+
+        // Reset the last fetch time to force a refresh regardless of time elapsed
+        lastFetchTime.current = 0;
+        console.log("Reset lastFetchTime to force refresh");
+
+        try {
+          // Fetch the actual exchange status from the server to get the real exchange ID
+          console.log("Fetching actual exchange status from server");
+          await fetchExchangeStatus();
+          console.log("Fetch completed successfully");
+        } catch (fetchError) {
+          console.error(
+            "Error fetching exchange status after creation:",
+            fetchError
+          );
+        }
+
+        // Show success toast notification regardless of fetch status
         if (toast) {
           toast.success(
             "Exchange request sent successfully! Redirecting to exchanges page..."
@@ -211,18 +296,27 @@ export function RequestExchangeButton({
         }
 
         // Redirect to exchanges page
+        console.log("Redirecting to exchanges page");
         setTimeout(() => {
           router.push("/exchanges");
         }, 2000); // Give user time to see the toast and the status change
       }
     } catch (error) {
       console.error("Error creating exchange request:", error);
+
+      // Log detailed error information
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+
       // Show error toast notification
       if (toast) {
         toast.error("Failed to send exchange request. Please try again.");
       }
     } finally {
       setLoading(false);
+      console.log("Exchange request process completed, loading set to false");
     }
   };
 
@@ -260,8 +354,11 @@ export function RequestExchangeButton({
   const getTooltipText = () => {
     if (!exchangeDetails) return "";
 
-    // Handle case where fromUserId might not exist
-    const isRequester = exchangeDetails.fromUserId === session?.user?.id;
+    // Use isFromCurrentUser flag if available, otherwise fall back to comparing IDs
+    const isRequester =
+      exchangeDetails.isFromCurrentUser !== undefined
+        ? exchangeDetails.isFromCurrentUser
+        : exchangeDetails.fromUserId === session?.user?.id;
 
     // Safely access the skill titles with optional chaining and fallback values
     // Use the current skill title as a fallback if we don't have the exchange details
@@ -274,7 +371,11 @@ export function RequestExchangeButton({
 
     switch (exchangeStatus) {
       case "pending":
-        return `You have a pending exchange request for "${otherSkill}" with your "${yourSkill}"`;
+        if (isRequester) {
+          return `You have sent a pending exchange request offering "${yourSkill}" for "${otherSkill}"`;
+        } else {
+          return `You have received a pending exchange request offering "${otherSkill}" for your "${yourSkill}"`;
+        }
       case "accepted":
         return `Your exchange of "${yourSkill}" for "${otherSkill}" was accepted`;
       case "rejected":
@@ -357,8 +458,15 @@ export function RequestExchangeButton({
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false);
-            // Refresh exchange status after modal is closed
+
+            // Reset the last fetch time to force a refresh regardless of time elapsed
+            lastFetchTime.current = 0;
+
+            // Fetch the actual exchange status from the server
+            // This ensures we have the correct data from the backend
+            // and will update the UI accordingly
             fetchExchangeStatus();
+
             // Also refresh user skills in case they've changed
             fetchUserSkills();
           }}

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { API_ENDPOINTS } from "@/config/api";
+import { API_ENDPOINTS, API_BASE_BACKEND, API_PREFIX } from "@/config/api";
 
 export interface Exchange {
   id: string;
@@ -10,7 +10,9 @@ export interface Exchange {
   requestedSkillId?: string; // Skill requested by fromUser
   status: "pending" | "accepted" | "rejected";
   createdAt?: string;
+  updatedAt?: string;
   isActive?: boolean;
+  deletedAt?: string | null;
 
   // User information
   fromUser?: {
@@ -61,12 +63,23 @@ export interface Exchange {
     description?: string;
     category?: string;
   };
+
+  // Helper flags for UI
+  isFromCurrentUser?: boolean;
+  isToCurrentUser?: boolean;
 }
 
 export interface ExchangeFilters {
   status?: "pending" | "accepted" | "rejected";
   skillId?: string;
 }
+
+// Log API configuration on module load
+console.log("API Configuration:", {
+  API_BASE_BACKEND,
+  API_PREFIX,
+  exchangesCreateEndpoint: API_ENDPOINTS.exchanges.create,
+});
 
 export function useExchanges() {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
@@ -121,39 +134,48 @@ export function useExchanges() {
 
       // Process each exchange to ensure it has the required fields
       const processedExchanges = exchangesData.map((exchange) => {
+        // Cast to the Exchange interface defined in this file to add frontend properties
+        const processedExchange = { ...exchange } as Exchange;
+
         // Map offeredSkill to fromUserSkill if available
-        if (exchange.offeredSkill) {
-          exchange.fromUserSkill = {
-            id: exchange.offeredSkill.id,
-            title: exchange.offeredSkill.title,
-            description: exchange.offeredSkill.description,
-            category: exchange.offeredSkill.category?.name,
+        if (processedExchange.offeredSkill) {
+          processedExchange.fromUserSkill = {
+            id: processedExchange.offeredSkill.id,
+            title: processedExchange.offeredSkill.title,
+            description: processedExchange.offeredSkill.description,
+            category: processedExchange.offeredSkill.category?.name,
           };
-        } else if (!exchange.fromUserSkill && exchange.offeredSkillId) {
+        } else if (
+          !processedExchange.fromUserSkill &&
+          processedExchange.offeredSkillId
+        ) {
           // Fallback if offeredSkill is not available
-          exchange.fromUserSkill = {
-            id: exchange.offeredSkillId,
+          processedExchange.fromUserSkill = {
+            id: processedExchange.offeredSkillId,
             title: "Unknown Skill",
           };
         }
 
         // Map requestedSkill to toUserSkill if available
-        if (exchange.requestedSkill) {
-          exchange.toUserSkill = {
-            id: exchange.requestedSkill.id,
-            title: exchange.requestedSkill.title,
-            description: exchange.requestedSkill.description,
-            category: exchange.requestedSkill.category?.name,
+        if (processedExchange.requestedSkill) {
+          processedExchange.toUserSkill = {
+            id: processedExchange.requestedSkill.id,
+            title: processedExchange.requestedSkill.title,
+            description: processedExchange.requestedSkill.description,
+            category: processedExchange.requestedSkill.category?.name,
           };
-        } else if (!exchange.toUserSkill && exchange.requestedSkillId) {
+        } else if (
+          !processedExchange.toUserSkill &&
+          processedExchange.requestedSkillId
+        ) {
           // Fallback if requestedSkill is not available
-          exchange.toUserSkill = {
-            id: exchange.requestedSkillId,
+          processedExchange.toUserSkill = {
+            id: processedExchange.requestedSkillId,
             title: "Unknown Skill",
           };
         }
 
-        return exchange;
+        return processedExchange;
       });
 
       setExchanges(processedExchanges);
@@ -200,93 +222,121 @@ export function useExchanges() {
     skillId: string,
     userId: string
   ) => {
-    if (!session) return null;
+    if (!session) {
+      console.error("Cannot check exchange status: No user session");
+      return null;
+    }
 
     try {
-      // Use the centralized API utility
-      const { api } = await import("@/lib/api");
+      console.log("Checking exchange status for:", {
+        skillId,
+        userId,
+        endpoint: API_ENDPOINTS.exchanges.status(userId),
+      });
 
       try {
-        // Use the centralized API utility with custom options for caching
-        const data = await api.get(
-          API_ENDPOINTS.exchanges.status(skillId, userId),
-          {
-            headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-            },
-          }
+        // Import the exchange service to use the updated method
+        const { exchangeService } = await import("@/services/exchangeService");
+
+        // Use the service with custom options for caching
+        console.log(
+          "Making API request to:",
+          API_ENDPOINTS.exchanges.status(userId)
         );
 
-        // Handle different response formats
-        // Format 1: { exchange: { ... } }
-        // Format 2: { data: { ... } }
-        // Format 3: { exists: boolean, status: string }
+        // Call the service method with userId and skillId
+        const response = await exchangeService.checkExchangeStatus(
+          userId,
+          skillId
+        );
+        console.log("Exchange status API response:", response);
 
-        if (data.exchange) {
-          // Already in the expected format
-          // Map offeredSkill/requestedSkill to fromUserSkill/toUserSkill if needed
-          if (data.exchange.offeredSkill && !data.exchange.fromUserSkill) {
-            data.exchange.fromUserSkill = {
-              id: data.exchange.offeredSkill.id,
-              title: data.exchange.offeredSkill.title,
-              description: data.exchange.offeredSkill.description,
-              category: data.exchange.offeredSkill.category?.name,
-            };
-          }
-          if (data.exchange.requestedSkill && !data.exchange.toUserSkill) {
-            data.exchange.toUserSkill = {
-              id: data.exchange.requestedSkill.id,
-              title: data.exchange.requestedSkill.title,
-              description: data.exchange.requestedSkill.description,
-              category: data.exchange.requestedSkill.category?.name,
-            };
-          }
-          return data;
-        } else if (data.data) {
-          // Transform from { data: { ... } } to { exchange: { ... } }
-          const exchange = data.data;
-          // Map offeredSkill/requestedSkill to fromUserSkill/toUserSkill if needed
-          if (exchange.offeredSkill && !exchange.fromUserSkill) {
-            exchange.fromUserSkill = {
-              id: exchange.offeredSkill.id,
-              title: exchange.offeredSkill.title,
-              description: exchange.offeredSkill.description,
-              category: exchange.offeredSkill.category?.name,
-            };
-          }
-          if (exchange.requestedSkill && !exchange.toUserSkill) {
-            exchange.toUserSkill = {
-              id: exchange.requestedSkill.id,
-              title: exchange.requestedSkill.title,
-              description: exchange.requestedSkill.description,
-              category: exchange.requestedSkill.category?.name,
-            };
-          }
-          return {
-            exchange: exchange,
-          };
-        } else if (data.exists !== undefined) {
-          // Transform from { exists: boolean, status: string } to { exchange: { ... } }
-          if (data.exists && data.status) {
+        // Process the response to extract the relevant exchange
+        if (response.data && response.data.requests) {
+          // Find the first relevant exchange (if any)
+          const relevantExchange = response.data.requests.find(
+            (req) =>
+              req.requestedSkillId === skillId || req.offeredSkillId === skillId
+          );
+
+          if (relevantExchange) {
+            // Process the exchange to ensure it has the required fields
+            // Cast to the Exchange interface defined in this file to add frontend properties
+            const processedExchange = { ...relevantExchange } as Exchange;
+
+            // Map offeredSkill to fromUserSkill if available
+            if (
+              processedExchange.offeredSkill &&
+              !processedExchange.fromUserSkill
+            ) {
+              processedExchange.fromUserSkill = {
+                id: processedExchange.offeredSkill.id,
+                title: processedExchange.offeredSkill.title,
+                description: processedExchange.offeredSkill.description,
+                category: processedExchange.offeredSkill.category?.name,
+              };
+            } else if (
+              !processedExchange.fromUserSkill &&
+              processedExchange.offeredSkillId
+            ) {
+              // Fallback if offeredSkill is not available
+              processedExchange.fromUserSkill = {
+                id: processedExchange.offeredSkillId,
+                title: "Unknown Skill",
+              };
+            }
+
+            // Map requestedSkill to toUserSkill if available
+            if (
+              processedExchange.requestedSkill &&
+              !processedExchange.toUserSkill
+            ) {
+              processedExchange.toUserSkill = {
+                id: processedExchange.requestedSkill.id,
+                title: processedExchange.requestedSkill.title,
+                description: processedExchange.requestedSkill.description,
+                category: processedExchange.requestedSkill.category?.name,
+              };
+            } else if (
+              !processedExchange.toUserSkill &&
+              processedExchange.requestedSkillId
+            ) {
+              // Fallback if requestedSkill is not available
+              processedExchange.toUserSkill = {
+                id: processedExchange.requestedSkillId,
+                title: "Unknown Skill",
+              };
+            }
+
+            // Add isFromCurrentUser and isToCurrentUser flags if not present
+            if (processedExchange.isFromCurrentUser === undefined) {
+              processedExchange.isFromCurrentUser =
+                processedExchange.fromUserId === session?.user?.id;
+            }
+            if (processedExchange.isToCurrentUser === undefined) {
+              processedExchange.isToCurrentUser =
+                processedExchange.toUserId === session?.user?.id;
+            }
+
             return {
-              exchange: {
-                id: data.id || "unknown",
-                status: data.status.toLowerCase(),
-                fromUserId: userId,
-                toUserId: "unknown",
-                // Add minimal required fields
-                fromUserSkill: { id: "unknown", title: "Your skill" },
-                toUserSkill: { id: skillId, title: "Requested skill" },
-              },
+              exchange: processedExchange,
             };
-          } else {
-            return { exchange: null };
           }
+
+          // If no exchange found, return null
+          return {
+            exchange: null,
+            message: "No exchange exists for this skill and user",
+          };
+        } else if ("exchange" in response) {
+          // Handle legacy format: { exchange: { ... } }
+          return response as any; // Type assertion to handle legacy format
         } else {
-          // Unknown format, return as is and let the component handle it
-          console.warn("Unexpected exchange status response format:", data);
-          return data;
+          // No relevant exchange found
+          return {
+            exchange: null,
+            message: "No exchange exists for this skill and user",
+          };
         }
       } catch (apiError: any) {
         // If it's a 404, it means there's no exchange yet, which is not an error
@@ -319,21 +369,93 @@ export function useExchanges() {
     offeredSkillId: string,
     requestedSkillId: string
   ) => {
-    if (!session) return false;
+    if (!session?.user?.id) {
+      console.error("Cannot create exchange request: No user session");
+      return false;
+    }
 
     try {
-      // Use the centralized API utility
-      const { api } = await import("@/lib/api");
-
-      await api.post(API_ENDPOINTS.exchanges.create, {
+      console.log("Creating exchange request with params:", {
         toUserId,
         offeredSkillId,
         requestedSkillId,
+        currentUserId: session.user.id,
+        endpoint: API_ENDPOINTS.exchanges.create,
       });
 
-      // Refresh the exchanges list after creating a new one
-      refreshExchanges();
-      return true;
+      // Try using direct fetch for more control
+      const currentSession = await import("next-auth/react").then((mod) =>
+        mod.getSession()
+      );
+
+      console.log("Session for exchange request:", {
+        hasSession: !!currentSession,
+        hasToken: !!currentSession?.accessToken,
+        userId: currentSession?.user?.id,
+      });
+
+      // Make the request with detailed logging
+      // Log the full URL for debugging
+      console.log("Full API URL:", API_ENDPOINTS.exchanges.create);
+      console.log("API base:", API_BASE_BACKEND);
+      console.log("API prefix:", API_PREFIX);
+
+      try {
+        // First try to ping the backend to see if it's reachable
+        try {
+          const pingResponse = await fetch(`${API_BASE_BACKEND}/health`, {
+            method: "GET",
+          });
+          console.log(
+            "Backend health check response:",
+            pingResponse.status,
+            await pingResponse.text()
+          );
+        } catch (pingError) {
+          console.warn("Backend health check failed:", pingError);
+        }
+
+        const response = await fetch(API_ENDPOINTS.exchanges.create, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(currentSession?.accessToken
+              ? {
+                  Authorization: `Bearer ${currentSession.accessToken}`,
+                }
+              : {}),
+          },
+          body: JSON.stringify({
+            toUserId,
+            offeredSkillId,
+            requestedSkillId,
+          }),
+        });
+
+        console.log("Exchange request response status:", response.status);
+
+        // Check if the response is ok
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(
+            `Exchange request failed: ${response.status} - ${errorText}`
+          );
+          throw new Error(
+            `Failed to create exchange request: ${response.status} ${response.statusText}`
+          );
+        }
+
+        // Parse the response
+        const data = await response.json();
+        console.log("Exchange request created successfully:", data);
+
+        // Refresh the exchanges list after creating a new one
+        refreshExchanges();
+        return true;
+      } catch (fetchError) {
+        console.error("Fetch error creating exchange request:", fetchError);
+        throw fetchError;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       return false;

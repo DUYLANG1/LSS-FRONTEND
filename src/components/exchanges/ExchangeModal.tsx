@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext } from "react";
 import { useSession } from "next-auth/react";
-import { API_ENDPOINTS } from "@/config/api";
+import { API_ENDPOINTS, API_BASE_BACKEND, API_PREFIX } from "@/config/api";
 import { Button } from "@/components/ui/Button";
 import { ErrorDisplay } from "@/components/common/ErrorDisplay";
 import { ToastContext } from "@/components/providers/ToastProvider";
@@ -75,15 +75,11 @@ export function ExchangeModal({
         }
       }
 
-      console.log("Skills response:", response);
-      console.log("Processed skills array:", skillsArray);
-
       setUserSkills(skillsArray);
       if (skillsArray.length > 0) {
         setSelectedSkillId(skillsArray[0].id);
       }
     } catch (err) {
-      console.error("Error fetching skills:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       setUserSkills([]); // Set to empty array on error
     } finally {
@@ -92,37 +88,66 @@ export function ExchangeModal({
   }
 
   async function handleSubmit() {
-    if (!selectedSkillId || !session) return;
+    if (!selectedSkillId || !session) {
+      // Cannot submit exchange request: No skill selected or no session
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
-      // Import the API utility to use the centralized fetch with auth
-      const { api } = await import("@/lib/api");
+      try {
+        // Add userId as a query parameter to the URL
+        const userId = session?.user?.id;
+        const url = new URL(API_ENDPOINTS.exchanges.create);
+        url.searchParams.append("userId", userId);
 
-      // Use the API utility which will automatically include the auth token
-      await api.post(API_ENDPOINTS.exchanges.create, {
-        offeredSkillId: selectedSkillId,
-        requestedSkillId: requestedSkillId,
-        toUserId: skillOwnerId,
-        fromUserId: session.user.id,
-      });
+        const response = await fetch(url.toString(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(session?.accessToken
+              ? {
+                  Authorization: `Bearer ${session.accessToken}`,
+                }
+              : {}),
+          },
+          body: JSON.stringify({
+            offeredSkillId: selectedSkillId,
+            requestedSkillId: requestedSkillId,
+            toUserId: skillOwnerId,
+          }),
+        });
 
-      setSuccess(true);
-      // Show success toast notification
-      if (toast) {
-        toast.success(
-          "Exchange request sent successfully! Redirecting to exchanges page..."
-        );
+        // Check if the response is ok
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Failed to create exchange request: ${response.status} ${response.statusText}`
+          );
+        }
+
+        // Parse the response
+        const data = await response.json();
+
+        setSuccess(true);
+        // Show success toast notification
+        if (toast) {
+          toast.success(
+            "Exchange request sent successfully! Redirecting to exchanges page..."
+          );
+        }
+
+        // Close modal after showing success message briefly
+        setTimeout(() => {
+          onClose(); // This will trigger fetchExchangeStatus in the parent component
+          // Redirect to exchanges page after successful request
+          window.location.href = "/exchanges";
+        }, 2000);
+      } catch (fetchError) {
+        throw fetchError;
       }
-
-      // Close modal after showing success message briefly
-      setTimeout(() => {
-        onClose(); // This will trigger fetchExchangeStatus in the parent component
-        // Redirect to exchanges page after successful request
-        window.location.href = "/exchanges";
-      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       // Show error toast notification
