@@ -97,19 +97,21 @@ export default function SkillCard({
       <CardFooter className="pt-4 border-t border-[var(--card-border)]">
         <div className="flex items-center justify-between w-full">
           <Link
-            href={`/profile/${skill.user.id}`}
+            href={skill.user?.id ? `/profile/${skill.user.id}` : "#"}
             className="flex items-center group"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium mr-2">
-              {skill.user.avatarUrl ? (
+              {skill.user?.avatarUrl ? (
                 <img
-                  src={skill.user.avatarUrl}
-                  alt={skill.user.name}
+                  src={skill.user?.avatarUrl || ""}
+                  alt={skill.user?.name || "User avatar"}
                   className="w-8 h-8 rounded-full object-cover"
                 />
-              ) : (
+              ) : skill.user?.name ? (
                 skill.user.name[0].toUpperCase()
+              ) : (
+                "?"
               )}
             </div>
           </Link>

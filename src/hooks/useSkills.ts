@@ -9,10 +9,11 @@ import {
 interface UseSkillsOptions {
   initialParams?: SkillsQueryParams;
   autoFetch?: boolean;
+  directUserId?: string; // New option for direct user ID in URL
 }
 
 export function useSkills(options: UseSkillsOptions = {}) {
-  const { initialParams = {}, autoFetch = true } = options;
+  const { initialParams = {}, autoFetch = true, directUserId } = options;
 
   const [skills, setSkills] = useState<Skill[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +32,20 @@ export function useSkills(options: UseSkillsOptions = {}) {
         setError(null);
 
         const paramsToUse = queryParams || params;
-        const response = await skillsService.getAll(paramsToUse);
+        let response;
+
+        // If directUserId is provided, use the direct URL method
+        if (directUserId) {
+          response = await skillsService.getSkillsByDirectUserId(directUserId);
+        }
+        // If userId is provided in params, use the getUserSkills method
+        else if (paramsToUse.userId) {
+          // Extract userId and pass the rest of the params
+          const { userId, ...restParams } = paramsToUse;
+          response = await skillsService.getUserSkills(userId, restParams);
+        } else {
+          response = await skillsService.getAll(paramsToUse);
+        }
 
         // Ensure skills is always an array, even if the API response is unexpected
         setSkills(response?.skills || []);
@@ -50,7 +64,7 @@ export function useSkills(options: UseSkillsOptions = {}) {
         setIsLoading(false);
       }
     },
-    [params, skills.length]
+    [params, skills.length, directUserId]
   );
 
   const updateParams = useCallback((newParams: Partial<SkillsQueryParams>) => {
@@ -67,7 +81,7 @@ export function useSkills(options: UseSkillsOptions = {}) {
     if (autoFetch) {
       fetchSkills();
     }
-  }, [params, autoFetch]); // Changed dependency from fetchSkills to params to prevent infinite fetching
+  }, [params, autoFetch, directUserId, fetchSkills]); // Include directUserId and fetchSkills in dependencies
 
   return {
     skills,

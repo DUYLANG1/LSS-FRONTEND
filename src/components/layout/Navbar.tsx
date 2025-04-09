@@ -177,7 +177,6 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-medium">
                     {session.user?.name?.[0]?.toUpperCase() || "U"}
                   </div>
-                  <span className="hidden md:inline">{session.user?.name}</span>
                   <svg
                     className={`w-4 h-4 transition-transform duration-200 ${
                       isDropdownOpen ? "rotate-180" : ""
@@ -388,6 +387,13 @@ export default function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Profile
+                  </Link>
+                  <Link
+                    href="/skills/my-skills"
+                    className="block px-3 py-2 rounded-md text-[var(--text-primary)] hover:bg-[var(--card-border)]"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    My Skills
                   </Link>
                 </>
               ) : (

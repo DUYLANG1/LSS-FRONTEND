@@ -63,8 +63,13 @@ export interface SkillsQueryParams {
 export const skillsService = {
   /**
    * Get all skills with optional filtering
+   * @param params Optional query parameters including userId for filtering by user
+   * @param directUserId Optional user ID to append directly to the URL (format: ?userId)
    */
-  async getAll(params?: SkillsQueryParams): Promise<SkillsResponse> {
+  async getAll(
+    params?: SkillsQueryParams,
+    directUserId?: string
+  ): Promise<SkillsResponse> {
     try {
       // Get the session to access the token, similar to the create method
       const session = await import("next-auth/react").then((mod) =>
@@ -72,40 +77,55 @@ export const skillsService = {
       );
 
       // Build URL with query parameters
-      const url = new URL(API_ENDPOINTS.skills.list);
+      let url;
+
+      // If directUserId is provided, append it directly to the URL
+      if (directUserId) {
+        url = new URL(`${API_ENDPOINTS.skills.list}?${directUserId}`);
+      } else {
+        url = new URL(API_ENDPOINTS.skills.list);
+      }
 
       // Set default limit to 9 cards per page
       const defaultLimit = 9;
 
-      // Add query parameters if provided
-      if (params) {
-        // Apply default limit if not specified
-        const paramsWithDefaults = {
-          limit: defaultLimit,
-          ...params,
-        };
+      // Skip adding parameters if we're using a direct user ID
+      if (!directUserId) {
+        // Add query parameters if provided
+        if (params) {
+          // Apply default limit if not specified
+          const paramsWithDefaults = {
+            limit: defaultLimit,
+            ...params,
+          };
 
-        Object.entries(paramsWithDefaults).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            // Special handling for category parameter - ensure it's a number
-            if (key === "category") {
-              // Convert string ID to number if it's a valid number
-              const categoryId = parseInt(String(value), 10);
-              if (!isNaN(categoryId)) {
-                url.searchParams.append(key, String(categoryId));
-              } else {
-                console.warn(
-                  `Invalid category ID: ${value}, not adding to query params`
-                );
+          Object.entries(paramsWithDefaults).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              // Special handling for category parameter - ensure it's a number
+              if (key === "category") {
+                // Convert string ID to number if it's a valid number
+                const categoryId = parseInt(String(value), 10);
+                if (!isNaN(categoryId)) {
+                  url.searchParams.append(key, String(categoryId));
+                } else {
+                  console.warn(
+                    `Invalid category ID: ${value}, not adding to query params`
+                  );
+                }
               }
-            } else {
-              url.searchParams.append(key, String(value));
+              // Special handling for userId parameter - ensure it's using the correct parameter name
+              else if (key === "userId") {
+                // The backend might be expecting 'user' instead of 'userId'
+                url.searchParams.append("user", String(value));
+              } else {
+                url.searchParams.append(key, String(value));
+              }
             }
-          }
-        });
-      } else {
-        // If no params provided, still add the default limit
-        url.searchParams.append("limit", String(defaultLimit));
+          });
+        } else {
+          // If no params provided, still add the default limit
+          url.searchParams.append("limit", String(defaultLimit));
+        }
       }
 
       const response = await fetch(url.toString(), {
@@ -122,9 +142,6 @@ export const skillsService = {
       });
 
       if (!response.ok) {
-        console.error(
-          `Failed to fetch skills: ${response.status} ${response.statusText}`
-        );
         throw new Error(
           `Failed to fetch skills: ${response.status} ${response.statusText}`
         );
@@ -133,11 +150,6 @@ export const skillsService = {
       const responseData = await response.json();
 
       // Check if the response has the expected structure with pagination metadata
-      // First, log the response structure to help debug
-      console.log(
-        "API Response Structure:",
-        JSON.stringify(responseData, null, 2)
-      );
 
       if (responseData && responseData.data) {
         // Extract skills data and pagination metadata from the response
@@ -460,5 +472,177 @@ export const skillsService = {
    */
   async delete(id: string): Promise<void> {
     return api.delete(API_ENDPOINTS.skills.delete(id));
+  },
+
+  /**
+   * Get skills for a user with direct user ID in URL
+   * @param userId The user ID to append directly to the URL
+   */
+  async getSkillsByDirectUserId(userId: string): Promise<SkillsResponse> {
+    try {
+      const response = await this.getAll(undefined, userId);
+
+      // Ensure each skill has at least an empty user object to prevent errors
+      if (response && response.skills) {
+        response.skills = response.skills.map((skill) => ({
+          ...skill,
+          user: skill.user || { id: "", name: "", avatarUrl: "" },
+        }));
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error fetching skills by direct user ID:", error);
+      return {
+        skills: [],
+        totalCount: 0,
+        meta: {
+          total: 0,
+          page: 1,
+          limit: 9,
+          totalPages: 1,
+        },
+      };
+    }
+  },
+
+  /**
+   * Get all skills for a specific user
+   */
+  async getUserSkills(
+    userId: string,
+    params?: SkillsQueryParams
+  ): Promise<SkillsResponse> {
+    try {
+      const session = await import("next-auth/react").then((mod) =>
+        mod.getSession()
+      );
+
+      // Build URL with query parameters
+      const url = new URL(API_ENDPOINTS.users.skills(userId));
+      const defaultLimit = 9;
+
+      // Add query parameters if provided
+      if (params) {
+        // Apply default limit if not specified
+        const paramsWithDefaults = {
+          limit: defaultLimit,
+          ...params,
+        };
+
+        Object.entries(paramsWithDefaults).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && key !== "userId") {
+            url.searchParams.append(key, String(value));
+          }
+        });
+      } else {
+        // If no params provided, still add the default limit
+        url.searchParams.append("limit", String(defaultLimit));
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.accessToken
+            ? {
+                Authorization: `Bearer ${session.accessToken}`,
+              }
+            : {}),
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch user skills: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const responseData = await response.json();
+
+      // Process the response data based on its structure
+      if (responseData && responseData.data) {
+        // Extract skills data and pagination metadata from the response
+        const skillsData = Array.isArray(responseData.data)
+          ? responseData.data
+          : [];
+        const paginationMeta = responseData.meta || {};
+
+        // Calculate total count and pages if not provided by the backend
+        const totalItems = paginationMeta.total || skillsData.length;
+
+        return {
+          skills: skillsData.map((skill: any) => ({
+            id: skill.id,
+            title: skill.title,
+            description: skill.description,
+            categoryId: skill.categoryId,
+            userId: skill.userId,
+            createdAt: skill.createdAt,
+            level: skill.level,
+            user: {
+              id: skill.user?.id,
+              name: skill.user?.name,
+              avatarUrl: skill.user?.avatar,
+            },
+            category: {
+              id: skill.category?.id,
+              name: skill.category?.name,
+            },
+          })),
+          totalCount: totalItems,
+          meta: paginationMeta,
+        };
+      }
+
+      // Handle the case where the response is just an array of skills
+      else if (responseData && Array.isArray(responseData)) {
+        const skillsData = responseData;
+        const totalItems = skillsData.length;
+
+        return {
+          skills: skillsData.map((skill: any) => ({
+            id: skill.id,
+            title: skill.title,
+            description: skill.description,
+            categoryId: skill.categoryId,
+            userId: skill.userId,
+            createdAt: skill.createdAt,
+            level: skill.level,
+            user: {
+              id: skill.user?.id,
+              name: skill.user?.name,
+              avatarUrl: skill.user?.avatar,
+            },
+            category: {
+              id: skill.category?.id,
+              name: skill.category?.name,
+            },
+          })),
+          totalCount: totalItems,
+          meta: {
+            total: totalItems,
+            page: 1,
+            limit: defaultLimit,
+            totalPages: Math.max(1, Math.ceil(totalItems / defaultLimit)),
+          },
+        };
+      }
+
+      // Fallback to default response if the format is unexpected
+      return {
+        skills: [],
+        totalCount: 0,
+        meta: {
+          total: 0,
+          page: 1,
+          limit: defaultLimit,
+          totalPages: 1,
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
   },
 };
