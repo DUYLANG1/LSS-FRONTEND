@@ -25,14 +25,24 @@ export const userService = {
    * Get user profile by ID
    */
   async getProfile(userId: string): Promise<UserProfile> {
-    return api.get<UserProfile>(API_ENDPOINTS.users.profile(userId));
+    const response = await api.get<{ data: UserProfile }>(
+      API_ENDPOINTS.users.profile(userId)
+    );
+    return response.data;
   },
 
   /**
    * Update user profile
    */
-  async updateProfile(userId: string, data: UpdateProfileData): Promise<UserProfile> {
-    return api.put<UserProfile>(API_ENDPOINTS.users.update(userId), data);
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileData
+  ): Promise<UserProfile> {
+    const response = await api.put<{ data: UserProfile }>(
+      API_ENDPOINTS.users.update(userId),
+      data
+    );
+    return response.data;
   },
 
   /**
@@ -40,5 +50,5 @@ export const userService = {
    */
   async getUserSkills(userId: string) {
     return api.get(API_ENDPOINTS.users.skills(userId));
-  }
+  },
 };
