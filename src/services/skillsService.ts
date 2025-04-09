@@ -133,6 +133,12 @@ export const skillsService = {
       const responseData = await response.json();
 
       // Check if the response has the expected structure with pagination metadata
+      // First, log the response structure to help debug
+      console.log(
+        "API Response Structure:",
+        JSON.stringify(responseData, null, 2)
+      );
+
       if (responseData && responseData.data) {
         // Extract skills data and pagination metadata from the response
         const skillsData = Array.isArray(responseData.data)

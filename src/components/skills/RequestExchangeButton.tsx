@@ -24,16 +24,11 @@ export function RequestExchangeButton({
 }: RequestExchangeButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [exchangeStatus, setExchangeStatus] = useState<ExchangeStatus>(null);
-  const [exchangeId, setExchangeId] = useState<string | null>(null);
   const [exchangeDetails, setExchangeDetails] = useState<Exchange | null>(null);
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  const {
-    exchanges,
-    loading: exchangesLoading,
-    checkExchangeStatusForSkill,
-  } = useExchanges();
+  const { checkExchangeStatusForSkill } = useExchanges();
 
   // Check if there's an existing exchange request for this skill
   useEffect(() => {
@@ -74,12 +69,10 @@ export function RequestExchangeButton({
       if (result && result.exchange) {
         // Update with the latest status from the ExchangeRequest table
         setExchangeStatus(result.exchange.status);
-        setExchangeId(result.exchange.id);
         setExchangeDetails(result.exchange);
       } else {
         // Reset states if no exchange found
         setExchangeStatus(null);
-        setExchangeId(null);
         setExchangeDetails(null);
 
         // Log message if provided
@@ -91,7 +84,6 @@ export function RequestExchangeButton({
       console.error("Error fetching exchange status:", error);
       // Reset states on error
       setExchangeStatus(null);
-      setExchangeId(null);
       setExchangeDetails(null);
     } finally {
       setLoading(false);
@@ -116,7 +108,7 @@ export function RequestExchangeButton({
 
   // Get appropriate button text based on exchange status
   const getButtonText = () => {
-    if (exchangesLoading) return "Loading...";
+    if (loading) return "Loading...";
 
     switch (exchangeStatus) {
       case "pending":
@@ -181,7 +173,7 @@ export function RequestExchangeButton({
           className={className}
           disabled={
             session?.user?.id === skillOwnerId ||
-            exchangesLoading ||
+            loading ||
             exchangeStatus === "pending" ||
             exchangeStatus === "accepted"
           }

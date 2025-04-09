@@ -141,8 +141,8 @@ export function SkillList({
         ))}
       </div>
 
-      {/* Loading indicator */}
-      {isLoading && (
+      {/* Loading indicator - only show when initially loading */}
+      {isLoading && safeSkills.length === 0 && (
         <div className="fixed bottom-4 right-4 bg-[var(--primary)] text-white px-4 py-2 rounded-full shadow-lg transition-opacity duration-300">
           Loading...
         </div>

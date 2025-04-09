@@ -24,7 +24,10 @@ export function useSkills(options: UseSkillsOptions = {}) {
   const fetchSkills = useCallback(
     async (queryParams?: SkillsQueryParams) => {
       try {
-        setIsLoading(true);
+        // Only set loading to true if we don't already have skills
+        if (!skills.length) {
+          setIsLoading(true);
+        }
         setError(null);
 
         const paramsToUse = queryParams || params;
@@ -47,7 +50,7 @@ export function useSkills(options: UseSkillsOptions = {}) {
         setIsLoading(false);
       }
     },
-    [params]
+    [params, skills.length]
   );
 
   const updateParams = useCallback((newParams: Partial<SkillsQueryParams>) => {
@@ -64,7 +67,7 @@ export function useSkills(options: UseSkillsOptions = {}) {
     if (autoFetch) {
       fetchSkills();
     }
-  }, [fetchSkills, autoFetch]);
+  }, [params, autoFetch]); // Changed dependency from fetchSkills to params to prevent infinite fetching
 
   return {
     skills,
