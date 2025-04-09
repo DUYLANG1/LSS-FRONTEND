@@ -96,9 +96,11 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
   if (!isMounted) return null;
 
   return createPortal(
-    <div className="fixed top-0 right-0 pt-16 px-4 pb-4 w-full md:max-w-sm z-50 flex flex-col items-end space-y-4">
+    <div className="fixed bottom-4 right-4 px-4 w-full md:max-w-sm z-40 flex flex-col-reverse items-end space-y-reverse space-y-4 pointer-events-none">
       {toasts.map((toast) => (
-        <Toast key={toast.id} toast={toast} onClose={onClose} />
+        <div key={toast.id} className="pointer-events-auto">
+          <Toast toast={toast} onClose={onClose} />
+        </div>
       ))}
     </div>,
     document.body
