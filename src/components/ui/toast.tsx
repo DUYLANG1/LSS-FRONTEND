@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { cn } from '@/lib/utils';
-import { Toast as ToastType } from '@/hooks/useToast';
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
+import { Toast as ToastType } from "@/hooks/useToast";
 
 interface ToastProps {
   toast: ToastType;
@@ -16,7 +16,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
       const timer = setTimeout(() => {
         setIsExiting(true);
       }, toast.duration! - 500); // Start exit animation 500ms before removal
-      
+
       return () => clearTimeout(timer);
     }
   }, [toast.duration]);
@@ -30,25 +30,25 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
 
   const getToastStyles = () => {
     switch (toast.type) {
-      case 'success':
-        return 'bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]';
-      case 'error':
-        return 'bg-[var(--error-bg)] text-[var(--error-text)] border-[var(--error-border)]';
-      case 'warning':
-        return 'bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]';
-      case 'info':
+      case "success":
+        return "bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]";
+      case "error":
+        return "bg-[var(--error-bg)] text-[var(--error-text)] border-[var(--error-border)]";
+      case "warning":
+        return "bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]";
+      case "info":
       default:
-        return 'bg-[var(--info-bg)] text-[var(--info-text)] border-[var(--info-border)]';
+        return "bg-[var(--info-bg)] text-[var(--info-text)] border-[var(--info-border)]";
     }
   };
 
   return (
     <div
       className={cn(
-        'max-w-sm w-full shadow-lg rounded-lg pointer-events-auto border overflow-hidden',
+        "max-w-sm w-full shadow-lg rounded-lg pointer-events-auto border overflow-hidden",
         getToastStyles(),
-        'transition-all duration-300 ease-in-out transform',
-        isExiting ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+        "transition-all duration-300 ease-in-out transform",
+        isExiting ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
       )}
     >
       <div className="p-4">
@@ -82,7 +82,10 @@ export interface ToastContainerProps {
   onClose: (id: string) => void;
 }
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
+export const ToastContainer: React.FC<ToastContainerProps> = ({
+  toasts,
+  onClose,
+}) => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose 
   if (!isMounted) return null;
 
   return createPortal(
-    <div className="fixed top-0 right-0 p-4 w-full md:max-w-sm z-50 flex flex-col items-end space-y-4">
+    <div className="fixed top-0 right-0 pt-16 px-4 pb-4 w-full md:max-w-sm z-50 flex flex-col items-end space-y-4">
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onClose={onClose} />
       ))}

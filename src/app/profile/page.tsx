@@ -1,11 +1,12 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { ProtectedRoute } from "@/components/providers/ProtectedRoute";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Form, FormField, FormInput, FormTextArea } from "@/components/ui/Form";
+import { ToastContext } from "@/components/providers/ToastProvider";
 import {
   userService,
   type UpdateProfileData,
@@ -18,6 +19,11 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const toast = useContext(ToastContext);
+
+  if (!toast) {
+    console.error("Toast context is not available");
+  }
 
   const {
     register,
@@ -44,6 +50,12 @@ export default function ProfilePage() {
           });
         } catch (error) {
           console.error("Error fetching user profile:", error);
+
+          // Show error toast notification
+          if (toast) {
+            toast.error("Failed to load profile data. Please try again.");
+          }
+
           setErrorMessage("Failed to load profile data. Please try again.");
         } finally {
           setIsLoading(false);
@@ -52,7 +64,7 @@ export default function ProfilePage() {
     };
 
     fetchUserProfile();
-  }, [session, reset]);
+  }, [session, reset, toast]);
 
   const onSubmit = async (data: UpdateProfileData) => {
     if (!session?.user?.id) return;
@@ -68,6 +80,13 @@ export default function ProfilePage() {
       );
 
       setUserProfile(updatedProfile);
+
+      // Show success toast notification
+      if (toast) {
+        toast.success("Profile updated successfully!");
+      }
+
+      // Also set the inline success message
       setSuccessMessage("Profile updated successfully!");
 
       // Update form with new values
@@ -79,6 +98,13 @@ export default function ProfilePage() {
       });
     } catch (error) {
       console.error("Error updating profile:", error);
+
+      // Show error toast notification
+      if (toast) {
+        toast.error("Failed to update profile. Please try again.");
+      }
+
+      // Also set the inline error message
       setErrorMessage("Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);

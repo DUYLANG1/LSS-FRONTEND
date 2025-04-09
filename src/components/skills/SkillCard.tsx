@@ -100,6 +100,7 @@ export default function SkillCard({
             href={skill.user?.id ? `/profile/${skill.user.id}` : "#"}
             className="flex items-center group"
             onClick={(e) => e.stopPropagation()}
+            title={`View ${skill.user?.name || "user"}'s profile`}
           >
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium mr-2">
               {skill.user?.avatarUrl ? (
@@ -114,6 +115,11 @@ export default function SkillCard({
                 "?"
               )}
             </div>
+            {skill.user?.name && (
+              <span className="text-sm text-[var(--text-secondary)] hover:text-[var(--primary)] transition-colors">
+                {skill.user.name}
+              </span>
+            )}
           </Link>
 
           {showActions && (
