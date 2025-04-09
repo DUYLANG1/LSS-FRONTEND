@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { userService, UserProfile } from "@/services/userService";
 import { useParams } from "next/navigation";
-import { formatDate } from "@/lib/utils";
+import { Skill } from "@/services/skillsService";
+import Link from "next/link";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -13,6 +14,9 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(true);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -31,7 +35,25 @@ export default function UserProfilePage() {
       }
     };
 
+    const fetchUserSkills = async () => {
+      if (!userId) return;
+
+      try {
+        setIsLoadingSkills(true);
+        setSkillsError(null);
+        const response = await userService.getUserSkills(userId);
+        setSkills(response.data || []);
+      } catch (err) {
+        console.error("Error fetching user skills:", err);
+        setSkillsError("Failed to load user skills. Please try again.");
+        setSkills([]);
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
     fetchUserProfile();
+    fetchUserSkills();
   }, [userId]);
 
   if (isLoading) {
@@ -111,9 +133,44 @@ export default function UserProfilePage() {
         <h2 className="text-xl font-semibold mb-4">Skills</h2>
         <Card>
           <CardBody>
-            <p className="text-gray-500">
-              This user's skills will be displayed here (coming soon)
-            </p>
+            {isLoadingSkills ? (
+              <p className="text-gray-500">Loading skills...</p>
+            ) : skillsError ? (
+              <p className="text-red-500">{skillsError}</p>
+            ) : skills.length === 0 ? (
+              <p className="text-gray-500 italic">
+                This user hasn't added any skills yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {skills.map((skill) => (
+                  <div
+                    key={skill.id}
+                    className="border rounded-lg p-4 hover:bg-gray-50"
+                  >
+                    <Link href={`/skills/${skill.id}`} className="block">
+                      <h3 className="font-medium text-lg mb-1">
+                        {skill.title}
+                      </h3>
+                      <div className="flex items-center mb-2">
+                        <span className="text-sm text-gray-500 mr-2">
+                          {skill.category?.name || "Uncategorized"}
+                        </span>
+                        {skill.level && (
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                            {skill.level.charAt(0) +
+                              skill.level.slice(1).toLowerCase()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {skill.description || "No description provided"}
+                      </p>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardBody>
         </Card>
       </div>

@@ -48,7 +48,9 @@ export const userService = {
   /**
    * Get skills offered by a user
    */
-  async getUserSkills(userId: string) {
+  async getUserSkills(
+    userId: string
+  ): Promise<{ data: import("@/services/skillsService").Skill[] }> {
     return api.get(API_ENDPOINTS.users.skills(userId));
   },
 };
